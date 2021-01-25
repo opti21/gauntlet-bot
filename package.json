@@ -1,0 +1,19 @@
+{
+  "name": "gauntlet-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gauntlet.js",
+  "scripts": {
+    "dev": "nodemon gauntlet.js"
+  },
+  "author": "opti21",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.824.0",
+    "discord.js": "^12.5.1",
+    "dotenv": "^8.2.0",
+    "mongoose": "^5.11.11",
+    "node-url-downloader": "^0.1.9",
+    "uuid": "^8.3.2"
+  }
+}
