@@ -4,7 +4,7 @@
   "description": "",
   "main": "gauntlet.js",
   "scripts": {
-    "dev": "nodemon gauntlet.js"
+    "dev": "nodemon gauntletNew.js"
   },
   "author": "opti21",
   "license": "MIT",
