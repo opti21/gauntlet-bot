@@ -143,7 +143,7 @@ dClient.on("message", async (message) => {
                 .setColor("#db48cf")
                 .setTitle(`Upload files`)
                 .setDescription(
-                  'Upload your files here, when you are done adding files send **"done"**'
+                  'Upload your files here.\n when you are done adding files send **"done"**'
                 );
               dmchannel.send(fileInstructionEmbed);
 

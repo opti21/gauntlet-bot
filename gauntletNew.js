@@ -5,8 +5,7 @@ const dClient = new Discord.Client();
 const mongoose = require("mongoose");
 const fs = require("fs");
 const allowedAdmins = ["opti21"];
-const newSubmissionStart = require("./newSubmissionStart");
-const userSubmissionMenu = require("./userSubmissionMenu");
+const submissionFuncs = require("./submissionFuncs")
 
 mongoose.connect(
   `mongodb+srv://gauntlet:${process.env.MONGO_PASS}@cluster0.9bvpn.mongodb.net/gauntlet?retryWrites=true&w=majority`,
@@ -41,11 +40,11 @@ dClient.on("message", async (message) => {
 
     if (userSubmissions.length === 0) {
       message.author.createDM().then((dmChannel) => {
-        newSubmissionStart(dmChannel);
+        submissionFuncs.newSubmissionStart(dmChannel);
       });
     } else {
       message.author.createDM().then((dmChannel) => {
-        userSubmissionMenu(dmChannel);
+        submissionFuncs.userSubmissionMenu(dmChannel);
       })
     }
   }
