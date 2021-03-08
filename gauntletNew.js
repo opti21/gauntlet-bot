@@ -40,7 +40,37 @@ dClient.on("message", async (message) => {
 
     if (userSubmissions.length === 0) {
       message.author.createDM().then((dmChannel) => {
-        submissionFuncs.newSubmissionStart(dmChannel);
+        const submitCommandResponse = new Discord.MessageEmbed()
+          .setColor("#db48cf")
+          .setTitle(`Hi There!`)
+          .setDescription(`
+          Would you like to make a new submission?
+          Reply yes or no
+          `);
+        dmChannel.send(submitCommandResponse);
+
+        const filter = (m) => m.author.id === dmChannel.recipient.id;
+        const responseCollector = new Discord.MessageCollector(
+          dmChannel,
+          filter
+        );
+
+        responseCollector.on("collect", (responseAnswer) => {
+          if (responseAnswer.content.toLowerCase() === "yes") {
+            submissionFuncs.newSubmissionStart(dmChannel)
+            responseCollector.stop()
+          } else if (responseAnswer.content.toLowerCase() === "no") {
+            message.reply("Alright, have a good day!")
+            responseCollector.stop()
+          } else {
+            responseAnswer.reply(`Please reply with "yes" or "no"`)
+              .then(m => { m.delete({ timeout: 5000 }) })
+          }
+        });
+
+        responseCollector.on("end", (collected) => {
+          console.log(`Review collector stopped`);
+        });
       });
     } else {
       message.author.createDM().then((dmChannel) => {

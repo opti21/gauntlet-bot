@@ -125,8 +125,8 @@ const collectFiles = async (dmChannel) => {
       }
     } else {
       // User is done uploading files
-      fileCollector.stop()
       reviewSubmission(dmChannel)
+      fileCollector.stop()
     }
   })
 
@@ -145,10 +145,13 @@ const reviewSubmission = async (dmChannel) => {
     .setColor("#db48cf")
     .setTitle(`Review Submission`)
     .setDescription(`
-                    Does your submission look good? Reply "yes" or "no"
+      Does your submission look good? 
+      Ready to submit it?
 
-                    **Description:** ${previewSubmission.description}
-                    `);
+      Reply "yes" or "no"
+
+      **Description:** ${previewSubmission.description}
+    `);
   dmChannel.send(submissionPreviewEmbed);
   let previewAttachments = JSON.parse(
     previewSubmission.attachments
@@ -160,14 +163,31 @@ const reviewSubmission = async (dmChannel) => {
 
   const filter = (m) => m.author.id === dmChannel.recipient.id;
   const reviewCollector = new Discord.MessageCollector(
-    dmchannel,
+    dmChannel,
     filter
   );
 
   reviewCollector.on("collect", (reviewAnswer) => {
-    if (reviewAnswer.m.content.toLowerCase() === "yes") {
-    } else if (reviewAnswer.m.content.toLowerCase() === "no") {
+    if (reviewAnswer.content.toLowerCase() === "yes") {
+      const submitEmbed = new Discord.MessageEmbed()
+        .setColor("#00fa6c")
+        .setTitle(`Submitted!`)
+        .setDescription(`
+        Thank you for your submission!
+
+        Be sure to watch the stream Sunday night
+        to see your submission reviewed by Billy :D
+        `);
+      dmChannel.send(submitEmbed);
+      reviewCollector.stop()
+
+    } else if (reviewAnswer.content.toLowerCase() === "no") {
+      // TODO
+      editSubmission(dmChannel,)
+      reviewCollector.stop()
     } else {
+      reviewAnswer.reply(`Please respond with yes or no`)
+        .then(m => { m.delete({ timeout: 5000 }) })
     }
   })
 
@@ -194,16 +214,17 @@ const userSubmissionMenu = async (dmChannel) => {
     filter,
   );
 
-  replyCollector.on("collect", async (m) => {
-    console.log(`Collected ${m.content}`);
-    if (m.content === "new") {
+  menuReplyCollector.on("collect", async (menuReplyMessage) => {
+    // console.log(`Collected ${m.content}`);
+    if (menuReplyMessage.content === "new") {
       newSubmissionStart(dmchannel)
       replyCollector.stop()
-    } else if (m.content === "edit") {
+    } else if (menuReplyMessage.content === "edit") {
       editSubmission(dmChannel)
       replyCollector.stop()
     } else {
-      dmchannel.send('Please either reply with "edit" or "new"')
+      menuReplyMessage.reply(`Please respond with yes or no`)
+        .then(m => { m.delete({ timeout: 5000 }) })
     }
   });
 
@@ -212,7 +233,7 @@ const userSubmissionMenu = async (dmChannel) => {
   });
 }
 
-const editSubmission = async (dmChannel) => {
+const editSubmissionsMenu = async (dmChannel) => {
   const submissions = await Submission.find({
     user: dmChannel.recipient.id
   })
@@ -220,6 +241,7 @@ const editSubmission = async (dmChannel) => {
   let userSubmissionsText = ""
 
   submissions.forEach(sub => {
+    console.log(sub)
     userSubmissionsText += `${sub.week}: ${sub.description.slice(0, 20)}...\n`
   })
 
@@ -235,30 +257,27 @@ const editSubmission = async (dmChannel) => {
 
     `);
   dmChannel.send(editMenuEmbed);
-  let previewAttachments = JSON.parse(
-    previewSubmission.attachments
-  );
-
-  previewAttachments.forEach((attachment) => {
-    dmChannel.send(attachment);
-  });
 
   const filter = (m) => m.author.id === dmChannel.recipient.id;
-  const reviewCollector = new Discord.MessageCollector(
+  const editMenuReplyCollector = new Discord.MessageCollector(
     dmchannel,
     filter
   );
 
-  reviewCollector.on("collect", (reviewAnswer) => {
-    if (reviewAnswer.m.content.toLowerCase() === "yes") {
-    } else if (reviewAnswer.m.content.toLowerCase() === "no") {
+  editMenuReplyCollector.on("collect", (reply) => {
+    if (reply.content.toLowerCase() === "yes") {
+    } else if (reply.content.toLowerCase() === "no") {
     } else {
     }
   })
 
-  reviewCollector.on("end", (collected) => {
+  editMenuReplyCollector.on("end", (collected) => {
     console.log("Review Collector stopped")
   })
+}
+
+const editSubmission = async (dmchannel) => {
+
 }
 
 
@@ -267,5 +286,6 @@ module.exports = {
   collectFiles: collectFiles,
   reviewSubmission: reviewSubmission,
   userSubmissionMenu: userSubmissionMenu,
+  editSubmissionsMenu: editSubmissionsMenu,
   editSubmission: editSubmission
 }
