@@ -1,0 +1,24 @@
+
+Todo:
+  ☐ Edit "new" submission function
+    * Check to see if user has already submitted
+    for that week's gauntlet
+  ☐ Gauntlet week info commands @started(21-03-10 00:12)
+    * So the gauntlet info can be editied every week
+    * It will create new gauntlet files on db
+    ☐ addGauntlet function
+    ☐ editGauntlet function
+
+    
+  ☐ Add cut off command
+    * When user goes to make a new submission it
+      will check to see if they are able to submit
+      if not it will let them know
+  ☐ Create Delete option
+  ☐ Add view option
+  ☐ Tests?
+     way too much work but why not
+
+Done:
+  ✔ finish editFiles Function @started(21-03-09 22:37) @done(21-03-09 23:32) @lasted(55m15s)
+  ✔ Set editing to false on final submission @done(21-03-09 22:36)

@@ -19,6 +19,7 @@ db.once("open", function () {
 });
 
 const Submission = require("./models/submissions");
+const { editGauntletStart, addGauntletStart } = require("./gaunletWeekFuncs");
 
 dClient.once("ready", () => {
   console.log("Discord Ready!");
@@ -32,13 +33,14 @@ dClient.on("message", async (message) => {
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
-  if (command === "submit") {
+  if (command === "gauntlet" || command === "g") {
     let userSubmissions = await Submission.find({
       user: message.author.id,
     });
     console.log(userSubmissions);
 
     if (userSubmissions.length === 0) {
+      // User does not have exisiting submissions
       message.author.createDM().then((dmChannel) => {
         const submitCommandResponse = new Discord.MessageEmbed()
           .setColor("#db48cf")
@@ -73,8 +75,9 @@ dClient.on("message", async (message) => {
         });
       });
     } else {
+      // User has exisiting submissions
       message.author.createDM().then((dmChannel) => {
-        submissionFuncs.userSubmissionMenu(dmChannel);
+        submissionFuncs.returningUserMenu(dmChannel);
       })
     }
   }
@@ -95,11 +98,40 @@ dClient.on("message", async (message) => {
     });
   }
 
-  if (command === "setinfo") {
+  if (command === "gadmin") {
     if (allowedAdmins.includes(message.author.username)) {
       console.log("User allowed");
-      message.reply("What is the new week");
-      // TODO: Finish this command
+      message.author.createDM().then((dmChannel) => {
+        const questionEmbed = new Discord.MessageEmbed()
+          .setColor("db48cf")
+          .setTitle(`Admin Menu`)
+          .setDescription(`
+        1: Add Gauntlet
+        2: Edit gauntlet
+        `);
+
+        dmChannel.send(questionEmbed)
+        const filter = (m) => m.author.id === dmChannel.recipient.id;
+        const responseCollector = new Discord.MessageCollector(
+          dmChannel,
+          filter
+        );
+
+        responseCollector.on("collect", async (reply) => {
+          if (parseInt(reply.content) === 1) {
+            addGauntletStart(dmChannel)
+          } else if (parseInt(reply.content) === 2) {
+            editGauntlet(dmChannel)
+          } else {
+            reply.reply("Please respond with a number").then(msg => {
+              msg.delete({ timeout: 5000 })
+            })
+          }
+        })
+
+
+      })
+
     } else {
       message.reply("This command is only for admins").then((msg) => {
         msg.delete({ timeout: 5000 });
