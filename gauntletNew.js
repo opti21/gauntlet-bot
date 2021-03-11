@@ -120,8 +120,10 @@ dClient.on("message", async (message) => {
         responseCollector.on("collect", async (reply) => {
           if (parseInt(reply.content) === 1) {
             addGauntletStart(dmChannel)
+            responseCollector.stop()
           } else if (parseInt(reply.content) === 2) {
-            editGauntlet(dmChannel)
+            editGauntletStart(dmChannel)
+            responseCollector.stop()
           } else {
             reply.reply("Please respond with a number").then(msg => {
               msg.delete({ timeout: 5000 })
