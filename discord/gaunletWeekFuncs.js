@@ -200,10 +200,16 @@ const editGauntlet = async (dmChannel, week) => {
         if (isNum(editMenuReply.content)) {
             if (parseInt(editMenuReply.content) === 1) {
                 // edit Theme
+                editMenuCollector.stop()
                 setGauntletTheme(dmChannel, week)
             } else if (parseInt(editMenuReply.content) === 2) {
                 // edit Description
+                editMenuCollector.stop()
                 setGauntletDescription(dmChannel, week)
+            } else if (parseInt(editMenuReply.content) === 3) {
+                editMenuReply.reply("Action Cancelled")
+                    .then(msg => { msg.delete({ timeout: 5000 }) })
+                editMenuCollector.stop()
             } else {
                 editMenuReply.reply("Please respond with 1, 2, 3")
                     .then(msg => { msg.delete({ timeout: 5000 }) })
@@ -276,6 +282,68 @@ const setGauntletDescription = async (dmChannel, week) => {
 
 }
 
+const setActiveWeek = async (dmChannel) => {
+    const activeEmbed = new Discord.MessageEmbed()
+        .setColor("#db48cf")
+        .setTitle(`Active Week`)
+        .setDescription(`
+        Which week do you want to set active?
+        `);
+    dmChannel.send(activeEmbed)
+    const filter = (m) => m.author.id === dmChannel.recipient.id;
+    const activeCollector = new Discord.MessageCollector(
+        dmChannel,
+        filter,
+    );
+
+    activeCollector.on("collect", async (activeReply) => {
+        if (isNum(activeReply)) {
+            let weekNum = parseInt(activeReply.content)
+            let weekExists = await GauntletWeek.exists({ week: weekNum })
+
+            if (weekExists) {
+                let currentActive = await GauntletWeek.find({ active: true })
+
+                if (currentActive.week === weekNum) {
+                    activeReply.reply("That week already is set as Active\n\nPlease select another or cancel")
+                        .then(msg => { msg.delete({ timeout: 5000 }) })
+
+                } else {
+                    await GauntletWeek.updateOne({ active: true }, {
+                        active: false
+                    })
+                    await GauntletWeek.updateOne({ week: weekNum }, {
+                        active: true
+                    })
+
+                    const updatedEmbed = new Discord.MessageEmbed()
+                        .setColor("#2cff14")
+                        .setTitle(`Active Week Set`)
+                        .setDescription(`
+                        Active week set to ${weekNum}
+                        `)
+                    dmChannel.send(updatedEmbed)
+                    activeCollector.stop()
+                }
+
+            } else {
+                activeReply.reply("That week does not exist please choose another one \n or send cancel")
+                    .then(msg => { msg.delete({ timeout: 5000 }) })
+
+            }
+        } else if (activeReply.content.toLowerCase() === "cancel") {
+            activeReply.reply("Action cancelled :)")
+                .then(msg => { msg.delete({ timeout: 5000 }) })
+            activeCollector.stop()
+
+        } else {
+            activeReply.reply("Please respond with a number or cancel")
+                .then(msg => { msg.delete({ timeout: 5000 }) })
+        }
+    })
+
+}
+
 
 const isNum = (string) => {
     let isNumFunc = /^\d+$/.test(string);
@@ -284,5 +352,6 @@ const isNum = (string) => {
 
 module.exports = {
     addGauntletStart,
-    editGauntletStart
+    editGauntletStart,
+    setActiveWeek
 }

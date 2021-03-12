@@ -1,13 +1,23 @@
 
-Todo:
-  ☐ Edit "new" submission function
-    * Check to see if user has already submitted
-    for that week's gauntlet
-  ☐ Gauntlet week info commands
+Frontend:
+  next.js Next auth
+  ✔ Add twitch Auth @done(21-03-12 02:34)
+  ☐ Figure out how to get URIs to match for auth
+  ☐ 
+
+Discord:
+  ✔ Add check to see if user is already editing submission @done(21-03-12 02:04)
+  ✔ Add submitted boolean to submissions @done(21-03-12 02:04)
+  ✔ Check to see if user already submitted for active week @done(21-03-11 23:03)
+  ✔ Gauntlet week info commands @done(21-03-11 18:40)
     * So the gauntlet info can be editied every week
     * It will create new gauntlet files on db
-    ☐ addGauntlet function
-    ☐ editGauntlet function
+    ✔ addGauntlet function @done(21-03-10 18:42)
+    ✔ editGauntlet function @done(21-03-11 01:16)
+      ✔ Set Title function @done(21-03-11 01:16)
+      ✔ Set Description function @done(21-03-11 01:16)
+  ☐ Figure out how to add theme to edit menu
+
 
     
   ☐ Add cut off command
@@ -22,3 +32,4 @@ Todo:
 Done:
   ✔ finish editFiles Function @started(21-03-09 22:37) @done(21-03-09 23:32) @lasted(55m15s)
   ✔ Set editing to false on final submission @done(21-03-09 22:36)
+ w

@@ -19,7 +19,8 @@ db.once("open", function () {
 });
 
 const Submission = require("./models/submissions");
-const { editGauntletStart, addGauntletStart } = require("./gaunletWeekFuncs");
+const GauntletWeek = require("./Models/GauntletWeeks")
+const { editGauntletStart, addGauntletStart, setActiveWeek } = require("./gaunletWeekFuncs");
 
 dClient.once("ready", () => {
   console.log("Discord Ready!");
@@ -108,6 +109,8 @@ dClient.on("message", async (message) => {
           .setDescription(`
         1: Add Gauntlet
         2: Edit gauntlet
+        3: Set Active Week
+        4: cancel
         `);
 
         dmChannel.send(questionEmbed)
@@ -123,6 +126,15 @@ dClient.on("message", async (message) => {
             responseCollector.stop()
           } else if (parseInt(reply.content) === 2) {
             editGauntletStart(dmChannel)
+            responseCollector.stop()
+          } else if (parseInt(reply.content) === 3) {
+            setActiveWeek(dmChannel)
+            responseCollector.stop()
+          } else if (parseInt(reply.content) === 4) {
+            reply.reply("Action cancelled :)").then(msg => {
+              msg.delete({ timeout: 5000 })
+            })
+
             responseCollector.stop()
           } else {
             reply.reply("Please respond with a number").then(msg => {

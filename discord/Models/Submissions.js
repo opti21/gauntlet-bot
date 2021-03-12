@@ -10,6 +10,10 @@ const submissionSchema = new Schema({
     attachments: {
         type: String,
         default: "[]"
+    },
+    submitted: {
+        type: Boolean,
+        default: false
     }
 })
 
