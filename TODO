@@ -1,9 +1,9 @@
-
+☐ Create README
 Frontend:
   next.js Next auth
   ✔ Add twitch Auth @done(21-03-12 02:34)
-  ☐ Figure out how to get URIs to match for auth
-  ☐ 
+  ✔ Figure out how to get URIs to match for auth @done(21-03-12 19:33)
+  ☐ Check that user's session is active when accessing api
 
 Discord:
   ✔ Add check to see if user is already editing submission @done(21-03-12 02:04)

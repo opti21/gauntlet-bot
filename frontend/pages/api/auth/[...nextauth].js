@@ -3,6 +3,11 @@ import Providers from 'next-auth/providers'
 
 export default NextAuth({
     // Configure one or more authentication providers
+    callbacks: {
+        async redirect(url, baseUrl) {
+            return baseUrl + '/current'
+        }
+    },
     providers: [
         Providers.Twitch({
             clientId: process.env.TWITCH_CLIENT,
@@ -11,6 +16,6 @@ export default NextAuth({
     ],
 
     // A database is optional, but required to persist accounts in a database
-    database: `mongodb+srv://gauntlet:${process.env.MONGO_PASS}@cluster0.9bvpn.mongodb.net/gauntlet?retryWrites=true&w=majority`,
+    database: process.env.MONGODB_URI,
 
 })

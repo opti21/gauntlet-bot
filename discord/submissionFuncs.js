@@ -17,12 +17,14 @@ const newSubmissionStart = async (dmChannel) => {
 
   let gauntletInfo = await GauntletWeeks.findOne({ active: true })
 
-  // console.log(gauntletInfo)
+  console.log(dmChannel.recipient.avatarURL())
 
   let newSubmission = new Submission({
     locked: false,
     editing: true,
     user: dmChannel.recipient.id,
+    user_pic: dmChannel.recipient.avatarURL({ format: "png", dynamic: true }),
+    username: dmChannel.recipient.username,
     week: gauntletInfo.week
   });
   newSubmission.save();
@@ -164,16 +166,12 @@ const reviewSubmission = async (dmChannel) => {
     filter
   );
 
-  reviewCollector.on("collect", (reviewAnswer) => {
+  reviewCollector.on("collect", async (reviewAnswer) => {
     if (reviewAnswer.content.toLowerCase() === "yes") {
-      try {
-        Submission.updateOne({ user: dmChannel.recipient.id, editing: true }, {
-          editing: false,
-          submitted: true
-        })
-      } catch (e) {
-        console.error(e)
-      }
+      await Submission.updateOne({ user: dmChannel.recipient.id, editing: true }, {
+        editing: false,
+        submitted: true
+      })
       const submitEmbed = new Discord.MessageEmbed()
         .setColor("#00fa6c")
         .setTitle(`Submitted!`)
