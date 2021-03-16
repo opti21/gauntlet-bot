@@ -6,7 +6,7 @@ export default NextAuth({
     callbacks: {
         async redirect(url, baseUrl) {
             return baseUrl + '/current'
-        }
+        },
     },
     providers: [
         Providers.Twitch({

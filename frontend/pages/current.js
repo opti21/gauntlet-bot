@@ -11,6 +11,7 @@ import CurrentWeekTable from '../components/CurrentTable'
 export default function Current() {
 
   const [session, loading] = useSession()
+  // console.log("isAdmin? " + session.isAdmin)
 
   return <>
     <Head>

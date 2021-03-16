@@ -11,6 +11,7 @@
     "antd": "^4.13.1",
     "apollo-server-micro": "^2.21.1",
     "cross-env": "^7.0.3",
+    "discord-markdown": "^2.4.2",
     "discord.js": "^12.5.1",
     "graphql": "^15.5.0",
     "mongodb": "^3.6.4",
@@ -19,6 +20,8 @@
     "next-auth": "^3.11.2",
     "react": "17.0.1",
     "react-dom": "17.0.1",
+    "react-markdown": "^5.0.3",
+    "remark-gfm": "^1.0.0",
     "swr": "^0.5.3"
   },
   "devDependencies": {
