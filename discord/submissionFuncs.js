@@ -263,8 +263,12 @@ const returningUserMenu = async (dmChannel) => {
     } else if (menuReplyMessage.content === "edit") {
       editSubmissionStartMenu(dmChannel)
       menuStartReplyCollector.stop()
+    } else if (menuReplyMessage.content === "cancel") {
+      menuReplyMessage.reply(`Alrighty see ya later :)`)
+        .then(m => { m.delete({ timeout: 5000 }) })
+      menuStartReplyCollector.stop()
     } else {
-      menuReplyMessage.reply(`Please respond with "submit" or "new"`)
+      menuReplyMessage.reply(`Please respond with "submit", "new", "cancel"`)
         .then(m => { m.delete({ timeout: 5000 }) })
     }
   });

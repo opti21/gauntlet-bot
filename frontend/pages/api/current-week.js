@@ -12,13 +12,20 @@ export default async (req, res) => {
             .project({ _id: 0 })
             .toArray()
 
-        const submissions = await db
+        const submissionsData = await db
             .collection('submissions')
             .find({
                 week: activeWeek[0].week,
                 submitted: true
             })
             .toArray()
+
+        let submissions = submissionsData.map((sub, index) => {
+            return {
+                key: index + 1,
+                ...sub
+            }
+        })
 
         res.status(200).json({
             week_info: activeWeek[0],

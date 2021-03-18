@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Breadcrumb } from 'antd';
+import { Alert, BackTop, Breadcrumb, Button, Typography } from 'antd';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router'
@@ -10,22 +10,35 @@ import useSWR from 'swr';
 import { connectToDatabase } from '../../util/mongodb';
 const { Content } = Layout;
 import Submission from '../../components/Submission'
+import Sider from 'antd/lib/layout/Sider';
+
+const { Title } = Typography
 
 
 const Review = (props) => {
-    const submission = props.submission
-    const fetcher = url => fetch(url).then(r => r.json())
+    const submissionData = props.submissionData
 
-    const [show, setShow] = useState(false)
+    const [showSubmission, setShowSubmission] = useState(submissionData.reviewed)
+
+    const startReview = async () => {
+        const response = await fetch(`/api/start-review/${submissionData.user.id}/${submissionData.week}`).then(r => r.json())
+        console.log(response)
+        if (!response.error) {
+            setShowSubmission(true)
+        } else {
+            console.error(response)
+        }
+    }
 
     return <>
         <Head>
             <title>Gauntlet Bot - Submission</title>
         </Head>
         <Layout className="layout">
+            <BackTop />
             <Gheader />
             <Content style={{ padding: '0 50px' }}>
-                <Breadcrumb>
+                <Breadcrumb style={{ marginTop: "10px", marginBottom: "10px" }}>
                     <Breadcrumb.Item>
                         <Link href="/current"><a>Current Week</a></Link>
                     </Breadcrumb.Item>
@@ -33,11 +46,22 @@ const Review = (props) => {
                         Submission
                 </Breadcrumb.Item>
                 </Breadcrumb>
-                <h1>Submission</h1>
-                {submission.exists ? (
-                    <Submission submission={submission} />
+                {submissionData.exists ? (
+                    <>
+                        <div style={{ width: "100%", textAlign: "center" }}>
+                            <Title>{submissionData.user.username}'s submission</Title>
+                            {!showSubmission ?
+                                <Button type="primary" size="large" onClick={startReview}>Start Review</Button> :
+                                <></>
+                            }
+                        </div>
+                        {showSubmission ?
+                            <Submission submissionData={submissionData} /> :
+                            <></>
+                        }
+                    </>
                 ) : (
-                    <p>Submission doesn't exist</p>
+                    <Alert message="Submission doesn't exist" type="error" />
                 )}
             </Content>
             <Gfooter />
@@ -57,26 +81,70 @@ export async function getServerSideProps(ctx) {
         .toArray()
 
     // console.log(submission)
+    let reviewed
+    if (submission[0].reviewed === "true") {
+        reviewed = true
+    } else {
+        reviewed = false
+    }
+
+    const attachmentArray = JSON.parse(submission[0].attachments)
+    console.log(attachmentArray)
+
+    let images = []
+    let files = []
+
+    if (attachmentArray.length > 0) {
+        attachmentArray.forEach((attachment, index) => {
+            const is_image = /^(?:(?<scheme>[^:\/?#]+):)?(?:\/\/(?<authority>[^\/?#]*))?(?<path>[^?#]*\/)?(?<file>[^?#]*\.(?<extension>[Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Gg][Ii][Ff]))(?:\?(?<query>[^#]*))?(?:#(?<fragment>.*))?$/gm.test(attachment)
+
+            const filenameRegex = /(?=\w+\.\w{3,4}$).+/gim;
+            const filename = attachment.match(filenameRegex)
+
+            if (is_image) {
+                images.push(
+                    {
+                        key: index + 1,
+                        is_image: is_image,
+                        url: attachment,
+                        filename: filename
+                    }
+                )
+            } else {
+                files.push(
+                    {
+                        key: index + 1,
+                        is_image: is_image,
+                        url: attachment,
+                        filename: filename
+                    }
+                )
+            }
+        })
+    }
 
     if (submission.length > 0) {
         return {
             props: {
-                submission: {
+                submissionData: {
                     exists: true,
                     user: {
+                        id: submission[0].user,
                         username: submission[0].username,
                         user_pic: submission[0].user_pic
                     },
+                    week: submission[0].week,
                     description: submission[0].description,
-                    files: submission[0].attachments,
-                    reviewed: submission[0].reviewed
+                    reviewed: reviewed,
+                    images: images,
+                    files: files
                 }
             }
         }
     } else {
         return {
             props: {
-                submission: {
+                submissionData: {
                     exists: false
                 }
             }
