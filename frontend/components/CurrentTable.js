@@ -1,4 +1,4 @@
-import { Alert, Skeleton, Table, Tag } from "antd"
+import { Alert, Avatar, Skeleton, Table, Tag, Statistic, Row, Col, Progress } from "antd"
 import Link from "next/link"
 import useSWR from "swr"
 
@@ -7,6 +7,23 @@ export default function CurrentWeekTable() {
     const fetcher = url => fetch(url).then(r => r.json())
     const { data, error } = useSWR('/api/current-week', fetcher)
 
+    let reviewedNum = 0
+    let reviewedPercentage
+
+    if (data) {
+
+        if (data.submissions) {
+            data.submissions.forEach(sub => {
+                if (sub.reviewed === "true") {
+                    ++reviewedNum
+                }
+            })
+            reviewedPercentage = Math.floor((reviewedNum / data.submissions.length) * 100)
+            console.log(reviewedPercentage)
+
+        }
+    }
+
     if (error) return <Alert message="Error loading data" type="error" />
     if (!data) return <Skeleton active />
 
@@ -14,7 +31,12 @@ export default function CurrentWeekTable() {
         {
             title: 'User',
             dataIndex: 'username',
-            key: 'username'
+            render: (text, record) => (
+                <div style={{ verticalAlign: "middle" }}>
+                    <Avatar src={record.user_pic} style={{ float: "left" }} />
+                    <p style={{ float: "left", fontSize: "15px", marginLeft: "10px" }}>{record.username}</p>
+                </div>
+            )
         },
         {
             title: 'Reviewed?',
@@ -41,7 +63,20 @@ export default function CurrentWeekTable() {
 
 
     return (
-        <Table dataSource={data.submissions} columns={columns} />
+        <>
+            <Row style={{ marginBottom: "10px" }}>
+                <Col>
+                    <Statistic title="# of Submissons" value={data.submissions.length} style={{ padding: "30px", margin: "0px 10px 10px 0px", background: "#212121" }} />
+                </Col>
+                <Col>
+                    <div style={{ background: "#212121", width: "200px", height: "124px" }}>
+                        <Statistic title="Reviewed:" value={reviewedNum} suffix={`/ ${data.submissions.length}`} style={{ padding: "30px 10px 0px 25px", float: "left" }} />
+                        <Progress type="circle" percent={reviewedPercentage} width={70} style={{ padding: "30px 0px 0px 10px", float: "left" }} />
+                    </div>
+                </Col>
+            </Row>
+            <Table dataSource={data.submissions} columns={columns} />
+        </>
     );
 
 }

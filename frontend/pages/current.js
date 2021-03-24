@@ -1,6 +1,7 @@
 import { useSession } from 'next-auth/client'
-import { Layout } from 'antd'
+import { Layout, Typography } from 'antd'
 const { Content } = Layout;
+const { Title } = Typography;
 import Gfooter from '../components/Gfooter';
 import Link from 'next/link';
 import Head from 'next/head'
@@ -11,7 +12,6 @@ import CurrentWeekTable from '../components/CurrentTable'
 export default function Current() {
 
   const [session, loading] = useSession()
-  // console.log("isAdmin? " + session.isAdmin)
 
   return <>
     <Head>
@@ -20,9 +20,13 @@ export default function Current() {
     <Layout className="layout">
       <Gheader activePage={'1'} />
       <Content style={{ padding: '0 50px' }}>
-        <h1>Current Week</h1>
-        {session ?
-          <CurrentWeekTable /> :
+        <Title style={{ marginTop: "10px" }}>Current Week</Title>
+        {session ? (
+          <>
+            <CurrentWeekTable />
+          </>
+
+        ) :
           <Link href="/api/auth/signin"><a>Sign in</a></Link>
         }
       </Content>

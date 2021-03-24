@@ -1,5 +1,5 @@
 require('dotenv').config()
-import { connectToDatabase } from "../../util/mongodb"
+import { connectToDatabase } from "../../util/mongodb_backend"
 import { getSession } from 'next-auth/client'
 
 export default async (req, res) => {

@@ -33,15 +33,15 @@ export default function Submission(props) {
                   {submissionData.images.map((image) => {
                     console.log("is image")
                     return (
-                      <div style={{ margin: "10px", float: "left" }}>
+                      <div style={{ margin: "5px", float: "left" }}>
                         <Image
                           width={75}
-                          height={75}
-                          src={image.url}
-                          preview={
-                            <Skeleton.Avatar size={100} shape={"square"} />
-                          }
+                          src="/preview.png"
+                          preview={{
+                            src: `${image.url}`
+                          }}
                           alt={image.filename}
+
                         />
                       </div>
                     );
