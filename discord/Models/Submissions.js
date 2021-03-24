@@ -22,7 +22,8 @@ const submissionSchema = new Schema({
         type: Boolean,
         default: false
     },
-    vod_link: String
+    vod_link: String,
+    discord_message: String
 },
     {
         timestamps: true

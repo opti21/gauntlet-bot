@@ -27,7 +27,7 @@ dClient.once("ready", () => {
 });
 
 dClient.on("message", async (message) => {
-  const prefix = "!";
+  const prefix = "!!";
 
   if (!message.content.startsWith(prefix) || message.author.bot) return;
 
@@ -60,7 +60,7 @@ dClient.on("message", async (message) => {
 
         responseCollector.on("collect", (responseAnswer) => {
           if (responseAnswer.content.toLowerCase() === "yes") {
-            submissionFuncs.newSubmissionStart(dmChannel)
+            submissionFuncs.newSubmissionStart(dmChannel, dClient)
             responseCollector.stop()
           } else if (responseAnswer.content.toLowerCase() === "no") {
             message.reply("Alright, have a good day!")
@@ -78,7 +78,7 @@ dClient.on("message", async (message) => {
     } else {
       // User has exisiting submissions
       message.author.createDM().then((dmChannel) => {
-        submissionFuncs.returningUserMenu(dmChannel);
+        submissionFuncs.returningUserMenu(dmChannel, dClient);
       })
     }
   }

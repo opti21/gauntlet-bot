@@ -1,9 +1,10 @@
 const Discord = require("discord.js");
 const Submission = require("./models/submissions");
 const GauntletWeeks = require("./Models/GauntletWeeks")
-const fs = require("fs").promises
 
-const newSubmissionStart = async (dmChannel) => {
+const SUBMISSION_CHANNEL = '761805260691865600'
+
+const newSubmissionStart = async (dmChannel, dClient) => {
   // console.log(dmChannel);
   const submitEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
@@ -17,7 +18,7 @@ const newSubmissionStart = async (dmChannel) => {
 
   let gauntletInfo = await GauntletWeeks.findOne({ active: true })
 
-  console.log(dmChannel.recipient.avatarURL())
+  // console.log(dmChannel.recipient.avatarURL())
 
   let newSubmission = new Submission({
     locked: false,
@@ -31,17 +32,22 @@ const newSubmissionStart = async (dmChannel) => {
 
   const filter = (m) => m.author.id === dmChannel.recipient.id;
   const descriptionCollector = new Discord.MessageCollector(dmChannel, filter, {
-    max: 1,
   });
 
   descriptionCollector.on("collect", async (m) => {
-    console.log(`Collected ${m.content}`);
-    await Submission.updateOne(
-      { user: m.author.id, editing: true },
-      {
-        description: m.content,
-      }
-    );
+    if (m.content.length > 0) {
+      console.log(`Collected ${m.content}`);
+      await Submission.updateOne(
+        { user: m.author.id, editing: true },
+        {
+          description: m.content,
+        }
+      );
+      descriptionCollector.stop()
+    } else {
+      m.reply('No text detected please enter text to continue')
+        .then(m => { m.delete({ timeout: 5000 }) })
+    }
   });
 
   descriptionCollector.on("end", (collected) => {
@@ -66,10 +72,10 @@ const newSubmissionStart = async (dmChannel) => {
 
     fileQuestionCollector.on("collect", async (m) => {
       if (m.content.toLowerCase() === "yes") {
-        collectFiles(dmChannel)
+        collectFiles(dmChannel, dClient)
         fileQuestionCollector.stop()
       } else if (m.content.toLowerCase() === "no") {
-        reviewSubmission(dmChannel)
+        reviewSubmission(dmChannel, dClient)
         fileQuestionCollector.stop()
       } else {
         m.reply(`Please reply with "yes" or "no"`)
@@ -80,7 +86,7 @@ const newSubmissionStart = async (dmChannel) => {
   });
 };
 
-const collectFiles = async (dmChannel) => {
+const collectFiles = async (dmChannel, dClient) => {
   const fileInstructionEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
     .setTitle(`Upload files`)
@@ -103,7 +109,7 @@ const collectFiles = async (dmChannel) => {
       });
       let attachmentsArray = JSON.parse(submission.attachments);
 
-      console.log(fileM.attachments.size)
+      // console.log(fileM.attachments.size)
       if (fileM.attachments.size > 0) {
         // There are attachments in this message
         attachmentsArray.push(fileM.attachments.first().url);
@@ -123,18 +129,19 @@ const collectFiles = async (dmChannel) => {
       }
     } else {
       // User is done uploading files
-      reviewSubmission(dmChannel)
+      reviewSubmission(dmChannel, dClient)
       fileCollector.stop()
     }
   })
 
-  fileCollector.on("end", (collected) => {
-    console.log(`Collected ${collected.size} files`)
-  })
+  // fileCollector.on("end", (collected) => {
+  //   console.log(`Collected ${collected.size} files`)
+  // })
 }
 
+
 // Review and/or Submit submission
-const reviewSubmission = async (dmChannel) => {
+const reviewSubmission = async (dmChannel, dClient) => {
   let previewSubmission = await Submission.findOne({
     user: dmChannel.recipient.id,
     editing: true,
@@ -149,9 +156,10 @@ const reviewSubmission = async (dmChannel) => {
 
       Reply "yes" or "no"
 
-      **Description:** ${previewSubmission.description}
+      If you had any files they are above
+      **Description:** 
+      ${previewSubmission.description}
     `);
-  dmChannel.send(submissionPreviewEmbed);
   let previewAttachments = JSON.parse(
     previewSubmission.attachments
   );
@@ -159,6 +167,8 @@ const reviewSubmission = async (dmChannel) => {
   previewAttachments.forEach((attachment) => {
     dmChannel.send(attachment);
   });
+
+  dmChannel.send(submissionPreviewEmbed);
 
   const filter = (m) => m.author.id === dmChannel.recipient.id;
   const reviewCollector = new Discord.MessageCollector(
@@ -168,10 +178,18 @@ const reviewSubmission = async (dmChannel) => {
 
   reviewCollector.on("collect", async (reviewAnswer) => {
     if (reviewAnswer.content.toLowerCase() === "yes") {
-      await Submission.updateOne({ user: dmChannel.recipient.id, editing: true }, {
+      let submittedDoc = await Submission.findOneAndUpdate({ user: dmChannel.recipient.id, editing: true }, {
         editing: false,
         submitted: true
-      })
+      }, { new: true })
+        .then(doc => {
+          return doc
+        })
+
+      console.log(submittedDoc)
+
+      postToDiscord(submittedDoc, dClient)
+
       const submitEmbed = new Discord.MessageEmbed()
         .setColor("#00fa6c")
         .setTitle(`Submitted!`)
@@ -186,7 +204,7 @@ const reviewSubmission = async (dmChannel) => {
 
     } else if (reviewAnswer.content.toLowerCase() === "no") {
       // TODO
-      editSubmission(dmChannel)
+      editSubmission(dmChannel, dClient)
       reviewCollector.stop()
     } else {
       reviewAnswer.reply(`Please respond with yes or no`)
@@ -199,7 +217,7 @@ const reviewSubmission = async (dmChannel) => {
   })
 }
 
-const returningUserMenu = async (dmChannel) => {
+const returningUserMenu = async (dmChannel, dClient) => {
   const menuStartEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
     .setTitle("Welcome back!").setDescription(`
@@ -207,7 +225,11 @@ const returningUserMenu = async (dmChannel) => {
       
       What would you like to do?
 
-      Reply with either "submit" or "edit"
+      Options:
+        - submit
+        - edit
+        - delete
+        - cancel
       `);
   dmChannel.send(menuStartEmbed);
 
@@ -223,7 +245,7 @@ const returningUserMenu = async (dmChannel) => {
       let activeWeek = await GauntletWeeks.findOne({ active: true })
       let submissionExists = await Submission.exists({ user: dmChannel.recipient.id, week: activeWeek.week })
       if (submissionExists) {
-
+        // User already submitted for current week
         const submittedEmbed = new Discord.MessageEmbed()
           .setColor("#db48cf")
           .setTitle("Already Submitted")
@@ -243,7 +265,7 @@ const returningUserMenu = async (dmChannel) => {
         submittedCollector.on("collect", async (submittedReply) => {
           let reply = submittedReply.content.toLowerCase()
           if (reply === "yes") {
-            editSubmission(dmChannel, activeWeek.week)
+            editSubmission(dmChannel, activeWeek.week, dClient)
             submittedCollector.stop()
           } else if (reply === "no") {
             submittedReply.reply(`Alright have a good one :)`)
@@ -252,24 +274,36 @@ const returningUserMenu = async (dmChannel) => {
           } else {
             submittedReply.reply(`Please respond with "yes", "no"`)
               .then(m => { m.delete({ timeout: 5000 }) })
-
           }
         })
 
       } else {
-        newSubmissionStart(dmChannel)
+        // User hasn't submitted for that week
+        newSubmissionStart(dmChannel, dClient)
       }
       menuStartReplyCollector.stop()
+
     } else if (menuReplyMessage.content === "edit") {
-      editSubmissionStartMenu(dmChannel)
+
+      editSubmissionStartMenu(dmChannel, dClient)
       menuStartReplyCollector.stop()
+
+    } else if (menuReplyMessage.content === "delete") {
+
+      deleteSubmissionMenu(dmChannel, dClient)
+      menuStartReplyCollector.stop()
+
     } else if (menuReplyMessage.content === "cancel") {
+
       menuReplyMessage.reply(`Alrighty see ya later :)`)
         .then(m => { m.delete({ timeout: 5000 }) })
       menuStartReplyCollector.stop()
+
     } else {
-      menuReplyMessage.reply(`Please respond with "submit", "new", "cancel"`)
+
+      menuReplyMessage.reply(`Please respond with "submit", "edit", "cancel"`)
         .then(m => { m.delete({ timeout: 5000 }) })
+
     }
   });
 
@@ -278,14 +312,14 @@ const returningUserMenu = async (dmChannel) => {
   });
 }
 
-const editSubmissionStartMenu = async (dmChannel) => {
+const editSubmissionStartMenu = async (dmChannel, dClient) => {
   const submissions = await Submission.find({
     user: dmChannel.recipient.id
   })
 
   let userSubmissionsText = ""
 
-  submissions.forEach(sub => {
+  submissions.slice(0, 5).forEach(sub => {
     console.log(sub)
     userSubmissionsText += `${sub.week}: ${sub.description.slice(0, 50)}...\n`
   })
@@ -298,6 +332,8 @@ const editSubmissionStartMenu = async (dmChannel) => {
     Reply with which week you want to edit
 
     or reply with cancel
+
+    Only shows the 5 most recent submissions
 
     Week: Description
     ${userSubmissionsText}
@@ -321,7 +357,7 @@ const editSubmissionStartMenu = async (dmChannel) => {
           .then(m => { m.delete({ timeout: 5000 }) })
       } else {
         // Submission exists
-        editSubmission(dmChannel, parseInt(reply.content))
+        editSubmission(dmChannel, parseInt(reply.content), dClient)
         editMenuStartReplyCollector.stop()
       }
     } else if (reply.content.toLowerCase() === "cancel") {
@@ -339,7 +375,7 @@ const editSubmissionStartMenu = async (dmChannel) => {
   })
 }
 
-const editSubmission = async (dmChannel, week) => {
+const editSubmission = async (dmChannel, week, dClient) => {
   let submission
   if (week) {
     console.log("week provided")
@@ -371,20 +407,20 @@ const editSubmission = async (dmChannel, week) => {
   editMenuReplyCollector.on("collect", (reply) => {
     if (reply.content === "descrpition" || parseInt(reply.content) === 1) {
 
-      editDescription(dmChannel, submission)
+      editDescription(dmChannel, submission, dClient)
       editMenuReplyCollector.stop()
 
     } else if (reply.content === "files" || parseInt(reply.content) === 2) {
 
-      editFiles(dmChannel, submission)
+      editFiles(dmChannel, submission, dClient)
       editMenuReplyCollector.stop()
 
     } else if (reply.content === "cancel" || parseInt(reply.content) === 3) {
 
       reply.reply(`Edit cancelled have a great day :)`)
         .then(m => { m.delete({ timeout: 5000 }) })
-
       editMenuReplyCollector.stop()
+
     } else {
       reply.reply(`Please respond with a number, "description", "files", or "cancel"`)
         .then(m => { m.delete({ timeout: 5000 }) })
@@ -397,7 +433,7 @@ const editSubmission = async (dmChannel, week) => {
 }
 
 
-const editDescription = async (dmChannel, submission) => {
+const editDescription = async (dmChannel, submission, dClient) => {
   const instructionEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
     .setTitle(`New Description`)
@@ -422,10 +458,13 @@ const editDescription = async (dmChannel, submission) => {
             const submitEmbed = new Discord.MessageEmbed()
               .setColor("#00fa6c")
               .setTitle(`Descrption updated`)
+
+            editDiscordMessage(newDoc, dClient)
+
             dmChannel.send(submitEmbed);
           } else {
             // Submission has not been submitted yet
-            reviewSubmission(dmChannel)
+            reviewSubmission(dmChannel, dClient)
           }
         })
     } catch (e) {
@@ -439,7 +478,68 @@ const editDescription = async (dmChannel, submission) => {
 
 }
 
-const editFiles = async (dmChannel, submission) => {
+const postToDiscord = async (doc, dClient) => {
+  let attachments = JSON.parse(doc.attachments)
+
+  let fileStr = ""
+
+  if (attachments.length > 0) {
+    attachments.forEach(file => {
+      fileStr += `${file}\n`
+    })
+  }
+
+  let submissionChannel = await dClient.channels.fetch(SUBMISSION_CHANNEL)
+  const submissionEmbed = new Discord.MessageEmbed()
+    .setColor("#db48cf")
+    .setTitle(`${doc.username}'s week ${doc.week} submission`)
+    .setDescription(`
+    **Description:** ${doc.description}
+
+    ${fileStr}
+    `);
+
+
+  submissionChannel.send(submissionEmbed).then(async msg => {
+    console.log(msg.id)
+    await Submission.findByIdAndUpdate(doc._id, {
+      discord_message: msg.id
+    }, { new: true }, (updatedDoc => { return updatedDoc }))
+  })
+
+}
+
+const editDiscordMessage = async (doc, dClient) => {
+
+  let attachments = JSON.parse(doc.attachments)
+
+  let fileStr = ""
+
+  if (attachments.length > 0) {
+    attachments.forEach(file => {
+      fileStr += `${file}\n`
+    })
+  }
+
+  const updatedEmbed = new Discord.MessageEmbed()
+    .setColor("#db48cf")
+    .setTitle(`${doc.username}'s week ${doc.week} submission`)
+    .setDescription(`
+    **Description:** ${doc.description}
+
+    ${fileStr}
+    `);
+
+  let submissionChannel = await dClient.channels.fetch(SUBMISSION_CHANNEL)
+  let oldMessage = await submissionChannel.messages.fetch(doc.discord_message)
+  oldMessage.edit(updatedEmbed)
+    .then(res => {
+      console.log('Message updated')
+    })
+
+}
+
+const editFiles = async (dmChannel, submission, dClient) => {
   // Clear Files first
   await Submission.updateOne({ user: dmChannel.recipient.id, week: submission.week }, {
     editing: true,
@@ -477,7 +577,7 @@ const editFiles = async (dmChannel, submission) => {
           {
             attachments: JSON.stringify(attachmentsArray),
           },
-          { useFindAndModify: false }
+          { useFindAndModify: false },
         );
 
       } else {
@@ -489,21 +589,140 @@ const editFiles = async (dmChannel, submission) => {
       // User is done uploading files
       let submission = Submission.findOne({ user: dmChannel.recipient.id, editing: true })
       if (submission.submitted) {
+        editDiscordMessage(submission, dClient)
         const doneEmbed = new Discord.MessageEmbed()
           .setColor("#00fa6c")
           .setTitle(`Files updated`)
         dmChannel.send(doneEmbed);
+
         fileCollector.stop()
       } else {
-        reviewSubmission(dmChannel)
+        reviewSubmission(dmChannel, dClient)
         fileCollector.stop()
       }
     }
   })
 
-  fileCollector.on("end", (collected) => {
-    console.log(`Collected ${collected.size} files`)
+  // fileCollector.on("end", (collected) => {
+  //   console.log(`Collected ${collected.size} files`)
+  // })
+
+}
+
+const deleteSubmissionMenu = async (dmChannel, dClient) => {
+  const submissions = await Submission.find({
+    user: dmChannel.recipient.id,
   })
+
+  let userSubmissionsText = ""
+
+  submissions.slice(0, 5).forEach(sub => {
+    console.log(sub)
+    userSubmissionsText += `${sub.week}: ${sub.description.slice(0, 50)}...\n`
+  })
+
+  const deleteInstructionEmbed = new Discord.MessageEmbed()
+    .setColor("#db48cf")
+    .setTitle(`Delete Submission`)
+    .setDescription(`
+      Which week did you want to delete?
+
+      ${userSubmissionsText}
+    `);
+  dmChannel.send(deleteInstructionEmbed);
+
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const deleteMenuCollector = new Discord.MessageCollector(
+    dmChannel,
+    filter
+  );
+
+  deleteMenuCollector.on("collect", async (reply) => {
+    if (isNum(reply.content)) {
+      let submission = await Submission.find({ user: dmChannel.recipient.id, week: parseInt(reply.content) })
+
+      if (submission.length > 0) {
+
+        deleteSubmission(dmChannel, dClient, submission[0])
+        deleteMenuCollector.stop()
+
+      } else {
+
+        reply.reply("Submission doesn't exist please pick an existing Submission")
+          .then(m => { m.delete({ timeout: 5000 }) })
+
+      }
+    } else if (reply.content.toLowerCase() === "cancel") {
+
+      reply.reply('Alrighty have see you around :)')
+      deleteMenuCollector.stop()
+
+    } else {
+      reply.reply('Please respond with a week number or "cancel"')
+        .then(m => { m.delete({ timeout: 5000 }) })
+    }
+  })
+}
+
+const deleteSubmission = async (dmChannel, dClient, submission) => {
+  const confirmEmbed = new Discord.MessageEmbed()
+    .setColor("#f00000")
+    .setTitle(`Delete Submission`)
+    .setDescription(`
+    **Are you sure you want to delete this Submission?**
+    🔴🔴**THIS CANNOT BE UNDONE**🔴🔴
+
+    **Week:** ${submission.week}
+    **Description:**
+    ${submission.description}
+    `);
+  dmChannel.send(confirmEmbed);
+
+
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const confirmCollector = new Discord.MessageCollector(
+    dmChannel,
+    filter
+  );
+
+  confirmCollector.on("collect", async (reply) => {
+    let answer = reply.content.toLowerCase()
+    if (answer === "yes") {
+      let submissionChannel = await dClient.channels.fetch(SUBMISSION_CHANNEL)
+      let oldMessage = await submissionChannel.messages.fetch(submission.discord_message)
+
+      oldMessage.delete()
+        .then(res => {
+          console.log("Message Deleted")
+        })
+        .catch(err => {
+          console.error(err)
+        })
+
+      Submission.findByIdAndDelete(submission._id)
+        .then(res => {
+          console.log("Document Deleted")
+        })
+        .catch(err => {
+          console.error(err)
+        })
+
+      const deleteFinishedEmbed = new Discord.MessageEmbed()
+        .setColor("#00fa6c")
+        .setTitle(`Submission Deleted`)
+      dmChannel.send(deleteFinishedEmbed);
+
+    } else if (answer === "no") {
+      reply.reply('Delete canceled')
+        .then(m => { m.delete({ timeout: 5000 }) })
+
+    } else {
+      reply.reply('Please respond with "yes" or "no"')
+        .then(m => { m.delete({ timeout: 5000 }) })
+    }
+
+  })
+
 
 }
 

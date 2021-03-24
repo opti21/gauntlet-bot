@@ -6,6 +6,10 @@ const gauntletWeekSchema = new Schema({
         type: Boolean,
         default: false
     },
+    accepting_submissions: {
+        type: Boolean,
+        default: true
+    },
     week: Number,
     theme: String,
     description: String,

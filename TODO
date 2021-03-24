@@ -4,9 +4,27 @@ Frontend:
   ✔ Add twitch Auth @done(21-03-12 02:34)
   ✔ Figure out how to get URIs to match for auth @done(21-03-12 19:33)
   ✔ Check that user's session is active when accessing api @done(21-03-15 21:33)
+  ✔ Create a vod link to give to viewer @done(21-03-24 02:09)
   ☐ combine header and footer into one file
+  ☐ Create Better index page
+    ☐ Add countdown to next Gauntlet
+  ☐ Add Submission status
+    Shows if they can still submit or not
+  ☐ Add moderating tools
 
 Discord:
+  ☐ Add opt-in to get pinged when review is started
+  ☐ Create ping when user's submission is being reviewed
+    * <user> Billy is starting to review your submission
+    * Attach vod link with offset
+  ☐ Add cut off command
+    * When user goes to make a new submission it
+      will check to see if they are able to submit
+      if not it will let them know
+  ☐ Figure out how to add theme to edit menu
+  ☐ Add view option
+  ☐ Tests?
+     way too much work but why not because it's hard 
   ✔ Add check to see if user is already editing submission @done(21-03-12 02:04)
   ✔ Add submitted boolean to submissions @done(21-03-12 02:04)
   ✔ Check to see if user already submitted for active week @done(21-03-11 23:03)
@@ -17,18 +35,12 @@ Discord:
     ✔ editGauntlet function @done(21-03-11 01:16)
       ✔ Set Title function @done(21-03-11 01:16)
       ✔ Set Description function @done(21-03-11 01:16)
-  ☐ Figure out how to add theme to edit menu
-
-
-    
-  ☐ Add cut off command
-    * When user goes to make a new submission it
-      will check to see if they are able to submit
-      if not it will let them know
-  ☐ Create Delete option
-  ☐ Add view option
-  ☐ Tests?
-     way too much work but why not
+  ✔ Post to discord channel when submitted @done(21-03-22 00:27)
+    * Need to keep track of message IDs so when user updates submission
+      it will also update the discord message
+  ✔ Add review embed after attachments @done(21-03-22 21:33)
+  ✔ Create Delete option @done(21-03-22 22:05)
+  ✔ Change review submission show 5 most recent submission @done(21-03-22 22:26)
 
 Done:
   ✔ finish editFiles Function @started(21-03-09 22:37) @done(21-03-09 23:32) @lasted(55m15s)
