@@ -5,6 +5,9 @@ Frontend:
   ✔ Figure out how to get URIs to match for auth @done(21-03-12 19:33)
   ✔ Check that user's session is active when accessing api @done(21-03-15 21:33)
   ✔ Create a vod link to give to viewer @done(21-03-24 02:09)
+  ✔ Create app Token and store it @done(21-03-24 17:35)
+    ✔ create function to check for it @done(21-03-24 17:35)
+  
   ☐ combine header and footer into one file
   ☐ Create Better index page
     ☐ Add countdown to next Gauntlet

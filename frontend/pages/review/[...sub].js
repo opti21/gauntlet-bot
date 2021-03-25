@@ -7,7 +7,7 @@ import Gheader from '../../components/Gheader';
 import Gfooter from '../../components/Gfooter';
 import { Layout } from 'antd'
 import useSWR from 'swr';
-import { connectToDatabase } from '../../util/mongodb';
+import { connectToDatabase } from '../../util/mongodb_backend';
 const { Content } = Layout;
 import Submission from '../../components/Submission'
 import Sider from 'antd/lib/layout/Sider';
