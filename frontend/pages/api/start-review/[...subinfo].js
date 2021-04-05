@@ -76,7 +76,7 @@ export default async (req, res) => {
 
 					// 441355780
 
-					let vidFetch = await fetch('https://api.twitch.tv/helix/videos?user_id=167160215', {
+					let vidFetch = await fetch('https://api.twitch.tv/helix/videos?user_id=441355780', {
 						headers: {
 							Authorization: 'Bearer ' + TWITCH_TOKEN,
 							'Client-ID': `${process.env.TWITCH_CLIENT}`
