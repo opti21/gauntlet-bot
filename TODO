@@ -14,6 +14,7 @@ Frontend:
   ☐ Add Submission status
     Shows if they can still submit or not
   ☐ Add moderating tools
+  ☐ Let users without admin rights be able to view submissions
 
 Discord:
   ☐ Add opt-in to get pinged when review is started

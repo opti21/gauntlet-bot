@@ -22,7 +22,10 @@ const submissionSchema = new Schema({
         type: Boolean,
         default: false
     },
-    vod_link: String,
+    vod_link: {
+        type: String,
+        default: "",
+    },
     discord_message: String
 },
     {

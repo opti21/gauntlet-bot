@@ -5,7 +5,8 @@ const dClient = new Discord.Client();
 const mongoose = require("mongoose");
 const fs = require("fs");
 const allowedAdmins = ["opti21"];
-const submissionFuncs = require("./submissionFuncs")
+const submissionFuncs = require("./submissionFuncs");
+const GauntletWeeks = require("./Models/GauntletWeeks");
 
 mongoose.connect(
   `mongodb+srv://gauntlet:${process.env.MONGO_PASS}@cluster0.9bvpn.mongodb.net/gauntlet?retryWrites=true&w=majority`,
@@ -18,9 +19,14 @@ db.once("open", function () {
   console.log("Mongoose connected");
 });
 
-const Submission = require("./models/submissions");
-const GauntletWeek = require("./Models/GauntletWeeks")
-const { editGauntletStart, addGauntletStart, setActiveWeek } = require("./gaunletWeekFuncs");
+const Submission = require("./Models/Submissions");
+const GauntletWeek = require("./Models/GauntletWeeks");
+const {
+  editGauntletStart,
+  addGauntletStart,
+  setActiveWeek,
+  setSubmissionStatus,
+} = require("./gaunletWeekFuncs");
 
 dClient.once("ready", () => {
   console.log("Discord Ready!");
@@ -45,8 +51,7 @@ dClient.on("message", async (message) => {
       message.author.createDM().then((dmChannel) => {
         const submitCommandResponse = new Discord.MessageEmbed()
           .setColor("#db48cf")
-          .setTitle(`Hi There!`)
-          .setDescription(`
+          .setTitle(`Hi There!`).setDescription(`
           Would you like to make a new submission?
           Reply yes or no
           `);
@@ -58,16 +63,30 @@ dClient.on("message", async (message) => {
           filter
         );
 
-        responseCollector.on("collect", (responseAnswer) => {
+        responseCollector.on("collect", async (responseAnswer) => {
           if (responseAnswer.content.toLowerCase() === "yes") {
-            submissionFuncs.newSubmissionStart(dmChannel, dClient)
-            responseCollector.stop()
+            let activeWeek = await GauntletWeeks.findOne({ active: true });
+            if (activeWeek.accepting_submissions) {
+              submissionFuncs.newSubmissionStart(dmChannel, dClient);
+            } else {
+              const submissionsClosedEmbed = new Discord.MessageEmbed()
+                .setColor("#ff0000")
+                .setTitle("Submissions Closed").setDescription(`
+                Unfortunately submissions for this week are closed
+                `);
+
+              dmChannel.send(submissionsClosedEmbed);
+            }
+            responseCollector.stop();
           } else if (responseAnswer.content.toLowerCase() === "no") {
-            message.reply("Alright, have a good day!")
-            responseCollector.stop()
+            message.reply("Alright, have a good day!");
+            responseCollector.stop();
           } else {
-            responseAnswer.reply(`Please reply with "yes" or "no"`)
-              .then(m => { m.delete({ timeout: 5000 }) })
+            responseAnswer
+              .reply(`Please reply with "yes" or "no"`)
+              .then((m) => {
+                m.delete({ timeout: 5000 });
+              });
           }
         });
 
@@ -79,7 +98,7 @@ dClient.on("message", async (message) => {
       // User has exisiting submissions
       message.author.createDM().then((dmChannel) => {
         submissionFuncs.returningUserMenu(dmChannel, dClient);
-      })
+      });
     }
   }
 
@@ -105,15 +124,15 @@ dClient.on("message", async (message) => {
       message.author.createDM().then((dmChannel) => {
         const questionEmbed = new Discord.MessageEmbed()
           .setColor("db48cf")
-          .setTitle(`Admin Menu`)
-          .setDescription(`
+          .setTitle(`Admin Menu`).setDescription(`
         1: Add Gauntlet
         2: Edit gauntlet
         3: Set Active Week
-        4: cancel
+        4: Set Submission Status
+        5: cancel
         `);
 
-        dmChannel.send(questionEmbed)
+        dmChannel.send(questionEmbed);
         const filter = (m) => m.author.id === dmChannel.recipient.id;
         const responseCollector = new Discord.MessageCollector(
           dmChannel,
@@ -122,30 +141,30 @@ dClient.on("message", async (message) => {
 
         responseCollector.on("collect", async (reply) => {
           if (parseInt(reply.content) === 1) {
-            addGauntletStart(dmChannel)
-            responseCollector.stop()
+            addGauntletStart(dmChannel);
+            responseCollector.stop();
           } else if (parseInt(reply.content) === 2) {
-            editGauntletStart(dmChannel)
-            responseCollector.stop()
+            editGauntletStart(dmChannel);
+            responseCollector.stop();
           } else if (parseInt(reply.content) === 3) {
-            setActiveWeek(dmChannel)
-            responseCollector.stop()
+            setActiveWeek(dmChannel);
+            responseCollector.stop();
           } else if (parseInt(reply.content) === 4) {
-            reply.reply("Action cancelled :)").then(msg => {
-              msg.delete({ timeout: 5000 })
-            })
+            setSubmissionStatus(dmChannel);
+            responseCollector.stop();
+          } else if (parseInt(reply.content) === 5) {
+            reply.reply("Action cancelled :)").then((msg) => {
+              msg.delete({ timeout: 5000 });
+            });
 
-            responseCollector.stop()
+            responseCollector.stop();
           } else {
-            reply.reply("Please respond with a number").then(msg => {
-              msg.delete({ timeout: 5000 })
-            })
+            reply.reply("Please respond with a number").then((msg) => {
+              msg.delete({ timeout: 5000 });
+            });
           }
-        })
-
-
-      })
-
+        });
+      });
     } else {
       message.reply("This command is only for admins").then((msg) => {
         msg.delete({ timeout: 5000 });

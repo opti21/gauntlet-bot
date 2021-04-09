@@ -1,357 +1,414 @@
 const Discord = require("discord.js");
-const GauntletWeek = require("./Models/GauntletWeeks")
+const GauntletWeek = require("./Models/GauntletWeeks");
 
 const addGauntletStart = async (dmChannel) => {
-    const questionEmbed = new Discord.MessageEmbed()
-        .setColor("db48cf")
-        .setTitle(`What week did you want to add?`)
-        .setDescription(`
+  const questionEmbed = new Discord.MessageEmbed()
+    .setColor("db48cf")
+    .setTitle(`What week did you want to add?`).setDescription(`
         Respond with a number
         or to cancel respond with "cancel"
         `);
-    dmChannel.send(questionEmbed)
+  dmChannel.send(questionEmbed);
 
-    const filter = (m) => m.author.id === dmChannel.recipient.id;
-    const gauntletStartCollector = new Discord.MessageCollector(
-        dmChannel,
-        filter
-    );
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const gauntletStartCollector = new Discord.MessageCollector(
+    dmChannel,
+    filter
+  );
 
-    gauntletStartCollector.on("collect", async (reply) => {
-        console.log("isnum: " + isNum(reply.content))
-        if (isNum(reply.content)) {
-            // Check to see if week already exits
-            let exists = await GauntletWeek.exists({
-                week: parseInt(reply.content)
-            })
-            console.log("exists: " + exists)
+  gauntletStartCollector.on("collect", async (reply) => {
+    console.log("isnum: " + isNum(reply.content));
+    if (isNum(reply.content)) {
+      // Check to see if week already exits
+      let exists = await GauntletWeek.exists({
+        week: parseInt(reply.content),
+      });
+      console.log("exists: " + exists);
 
-            if (exists) {
-                gauntletStartCollector.stop()
-                const existsEmbed = new Discord.MessageEmbed()
-                    .setColor("db48cf")
-                    .setTitle(`Week already exists`)
-                    .setDescription(`
+      if (exists) {
+        gauntletStartCollector.stop();
+        const existsEmbed = new Discord.MessageEmbed()
+          .setColor("db48cf")
+          .setTitle(`Week already exists`).setDescription(`
                     A gauntlet has already been set for that week.
                     Did you want to edit it?
                     reply with yes or no
                     `);
-                dmChannel.send(existsEmbed)
-                const filter = (m) => m.author.id === dmChannel.recipient.id;
-                const exsitsReplyCollector = new Discord.MessageCollector(
-                    dmChannel,
-                    filter
-                );
-
-                exsitsReplyCollector.on("collect", async (existsReply) => {
-                    if (existsReply.content.toLowerCase() === "yes") {
-                        editGauntletStart(dmChannel)
-                    } else if (existsReply.content.toLowerCase() === "no") {
-                        existsReply.reply("Action cancelled have a great day/night :)").then(msg => {
-                            msg.delete({ timeout: 5000 })
-                            exsitsReplyCollector.stop()
-                        })
-                    } else {
-                        existsReply.reply("Please resond with 'yes' or 'no'").then(msg => {
-                            msg.delete({ timeout: 5000 })
-                        })
-                    }
-                })
-            } else {
-                gauntletStartCollector.stop()
-                addGauntlet(dmChannel, parseInt(reply.content))
-            }
-
-        } else if (reply.content.toLowerCase() === "cancel") {
-            reply.reply("Cancelled have a great day/night :)").then(msg => {
-                msg.delete({ timeout: 5000 })
-            })
-            gauntletStartCollector.stop()
-
-        } else {
-            reply.reply("Please respond with a number or 'cancel'").then(msg => {
-                msg.delete({ timeout: 5000 })
-            })
-        }
-    })
-
-}
-
-const addGauntlet = async (dmChannel, week) => {
-    let newGauntletWeek = new GauntletWeek({
-        week: week,
-        editing: true
-    })
-    newGauntletWeek.save()
-    const titleEmbed = new Discord.MessageEmbed()
-        .setColor("db48cf")
-        .setTitle(`Gauntlet Theme`)
-        .setDescription(`
-        What is the new Gauntlet's Theme?
-        `);
-    dmChannel.send(titleEmbed)
-    const filter = (m) => m.author.id === dmChannel.recipient.id;
-    const themeCollector = new Discord.MessageCollector(
-        dmChannel,
-        filter,
-        { max: 1 }
-    );
-
-    themeCollector.on("collect", async (themeReply) => {
-        await GauntletWeek.updateOne({ week: week }, {
-            theme: themeReply.content
-        })
-    })
-
-    themeCollector.on("end", async (collected) => {
-        const newDescrpitionEmbed = new Discord.MessageEmbed()
-            .setColor("db48cf")
-            .setTitle(`Gauntlet Description`)
-            .setDescription(`
-            What is the new Gauntlet's description?
-            `);
-        dmChannel.send(newDescrpitionEmbed)
+        dmChannel.send(existsEmbed);
         const filter = (m) => m.author.id === dmChannel.recipient.id;
-        const descCollector = new Discord.MessageCollector(
-            dmChannel,
-            filter,
-            { max: 1 }
+        const exsitsReplyCollector = new Discord.MessageCollector(
+          dmChannel,
+          filter
         );
 
-        descCollector.on("collect", async (descReply) => {
-            await GauntletWeek.updateOne({ week: week }, {
-                description: descReply.content,
-                editing: false
-            })
-        })
+        exsitsReplyCollector.on("collect", async (existsReply) => {
+          if (existsReply.content.toLowerCase() === "yes") {
+            editGauntletStart(dmChannel);
+          } else if (existsReply.content.toLowerCase() === "no") {
+            existsReply
+              .reply("Action cancelled have a great day/night :)")
+              .then((msg) => {
+                msg.delete({ timeout: 5000 });
+                exsitsReplyCollector.stop();
+              });
+          } else {
+            existsReply
+              .reply("Please resond with 'yes' or 'no'")
+              .then((msg) => {
+                msg.delete({ timeout: 5000 });
+              });
+          }
+        });
+      } else {
+        gauntletStartCollector.stop();
+        addGauntlet(dmChannel, parseInt(reply.content));
+      }
+    } else if (reply.content.toLowerCase() === "cancel") {
+      reply.reply("Cancelled have a great day/night :)").then((msg) => {
+        msg.delete({ timeout: 5000 });
+      });
+      gauntletStartCollector.stop();
+    } else {
+      reply.reply("Please respond with a number or 'cancel'").then((msg) => {
+        msg.delete({ timeout: 5000 });
+      });
+    }
+  });
+};
 
-        descCollector.on("end", async (collected) => {
-            let createdGauntlet = await GauntletWeek.findOne({ week: week })
-            const newGauntletEmbed = new Discord.MessageEmbed()
-                .setColor("#2cff14")
-                .setTitle(`New Gauntlet Week Created`)
-                .setDescription(`
+const addGauntlet = async (dmChannel, week) => {
+  let newGauntletWeek = new GauntletWeek({
+    week: week,
+    editing: true,
+  });
+  newGauntletWeek.save();
+  const titleEmbed = new Discord.MessageEmbed()
+    .setColor("db48cf")
+    .setTitle(`Gauntlet Theme`).setDescription(`
+        What is the new Gauntlet's Theme?
+        `);
+  dmChannel.send(titleEmbed);
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const themeCollector = new Discord.MessageCollector(dmChannel, filter, {
+    max: 1,
+  });
+
+  themeCollector.on("collect", async (themeReply) => {
+    await GauntletWeek.updateOne(
+      { week: week },
+      {
+        theme: themeReply.content,
+      }
+    );
+  });
+
+  themeCollector.on("end", async (collected) => {
+    const newDescrpitionEmbed = new Discord.MessageEmbed()
+      .setColor("db48cf")
+      .setTitle(`Gauntlet Description`).setDescription(`
+            What is the new Gauntlet's description?
+            `);
+    dmChannel.send(newDescrpitionEmbed);
+    const filter = (m) => m.author.id === dmChannel.recipient.id;
+    const descCollector = new Discord.MessageCollector(dmChannel, filter, {
+      max: 1,
+    });
+
+    descCollector.on("collect", async (descReply) => {
+      await GauntletWeek.updateOne(
+        { week: week },
+        {
+          description: descReply.content,
+          editing: false,
+        }
+      );
+    });
+
+    descCollector.on("end", async (collected) => {
+      let createdGauntlet = await GauntletWeek.findOne({ week: week });
+      const newGauntletEmbed = new Discord.MessageEmbed()
+        .setColor("#2cff14")
+        .setTitle(`New Gauntlet Week Created`).setDescription(`
                 Week: ${createdGauntlet.week},
                 Theme: ${createdGauntlet.theme},
                 Description: ${createdGauntlet.description}
                 `);
-            dmChannel.send(newGauntletEmbed)
-        })
-
-    })
-
-}
-
+      dmChannel.send(newGauntletEmbed);
+    });
+  });
+};
 
 const editGauntletStart = async (dmChannel) => {
-    const startEmbed = new Discord.MessageEmbed()
-        .setColor("db48cf")
-        .setTitle(`Which gauntlet did you want to want to edit?`)
-        .setDescription(`
+  const startEmbed = new Discord.MessageEmbed()
+    .setColor("db48cf")
+    .setTitle(`Which gauntlet did you want to want to edit?`).setDescription(`
         Reply with the week you want to edit.
         `);
-    dmChannel.send(startEmbed)
-    const filter = (m) => m.author.id === dmChannel.recipient.id;
-    const editStartCollector = new Discord.MessageCollector(
-        dmChannel,
-        filter,
-    );
+  dmChannel.send(startEmbed);
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const editStartCollector = new Discord.MessageCollector(dmChannel, filter);
 
-    editStartCollector.on("collect", async (editStartReply) => {
-        if (isNum(editStartReply.content)) {
-            let exists = GauntletWeek.exists({ week: parseInt(editStartReply) })
-            if (exists) {
-                editGauntlet(dmChannel, parseInt(editStartReply))
-                editStartCollector.stop()
-            } else {
-                editStartReply.reply("Week does not exist, please choose a week that exists")
-                    .then(msg => { msg.delete({ timeout: 5000 }) })
-            }
-        } else if (editStartReply.content.toLowerCase() === "cancel") {
-            editStartReply.reply("Action cancelled have a great day/night :)")
-                .then(msg => { msg.delete({ timeout: 5000 }) })
-            editStartCollector.stop()
-        } else {
-            editStartReply.reply("Please only send a number or 'cancel'")
-                .then(msg => { msg.delete({ timeout: 5000 }) })
-        }
-    })
-}
+  editStartCollector.on("collect", async (editStartReply) => {
+    if (isNum(editStartReply.content)) {
+      let exists = GauntletWeek.exists({ week: parseInt(editStartReply) });
+      if (exists) {
+        editGauntlet(dmChannel, parseInt(editStartReply));
+        editStartCollector.stop();
+      } else {
+        editStartReply
+          .reply("Week does not exist, please choose a week that exists")
+          .then((msg) => {
+            msg.delete({ timeout: 5000 });
+          });
+      }
+    } else if (editStartReply.content.toLowerCase() === "cancel") {
+      editStartReply
+        .reply("Action cancelled have a great day/night :)")
+        .then((msg) => {
+          msg.delete({ timeout: 5000 });
+        });
+      editStartCollector.stop();
+    } else {
+      editStartReply
+        .reply("Please only send a number or 'cancel'")
+        .then((msg) => {
+          msg.delete({ timeout: 5000 });
+        });
+    }
+  });
+};
 
 const editGauntlet = async (dmChannel, week) => {
-    const startEmbed = new Discord.MessageEmbed()
-        .setColor("db48cf")
-        .setTitle(`What would you like to edit?`)
-        .setDescription(`
+  const startEmbed = new Discord.MessageEmbed()
+    .setColor("db48cf")
+    .setTitle(`What would you like to edit?`).setDescription(`
         1: Theme
         2: Description
         3: cancel
 
         Reply with a number from above
         `);
-    dmChannel.send(startEmbed)
-    const filter = (m) => m.author.id === dmChannel.recipient.id;
-    const editMenuCollector = new Discord.MessageCollector(
-        dmChannel,
-        filter,
-    );
+  dmChannel.send(startEmbed);
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const editMenuCollector = new Discord.MessageCollector(dmChannel, filter);
 
-    editMenuCollector.on("collect", async (editMenuReply) => {
-        if (isNum(editMenuReply.content)) {
-            if (parseInt(editMenuReply.content) === 1) {
-                // edit Theme
-                editMenuCollector.stop()
-                setGauntletTheme(dmChannel, week)
-            } else if (parseInt(editMenuReply.content) === 2) {
-                // edit Description
-                editMenuCollector.stop()
-                setGauntletDescription(dmChannel, week)
-            } else if (parseInt(editMenuReply.content) === 3) {
-                editMenuReply.reply("Action Cancelled")
-                    .then(msg => { msg.delete({ timeout: 5000 }) })
-                editMenuCollector.stop()
-            } else {
-                editMenuReply.reply("Please respond with 1, 2, 3")
-                    .then(msg => { msg.delete({ timeout: 5000 }) })
-            }
-        } else {
-            editMenuReply.reply("Please respond with a number only")
-                .then(msg => { msg.delete({ timeout: 5000 }) })
-        }
-    })
-
-}
+  editMenuCollector.on("collect", async (editMenuReply) => {
+    if (isNum(editMenuReply.content)) {
+      if (parseInt(editMenuReply.content) === 1) {
+        // edit Theme
+        editMenuCollector.stop();
+        setGauntletTheme(dmChannel, week);
+      } else if (parseInt(editMenuReply.content) === 2) {
+        // edit Description
+        editMenuCollector.stop();
+        setGauntletDescription(dmChannel, week);
+      } else if (parseInt(editMenuReply.content) === 3) {
+        editMenuReply.reply("Action Cancelled").then((msg) => {
+          msg.delete({ timeout: 5000 });
+        });
+        editMenuCollector.stop();
+      } else {
+        editMenuReply.reply("Please respond with 1, 2, 3").then((msg) => {
+          msg.delete({ timeout: 5000 });
+        });
+      }
+    } else {
+      editMenuReply.reply("Please respond with a number only").then((msg) => {
+        msg.delete({ timeout: 5000 });
+      });
+    }
+  });
+};
 
 const setGauntletTheme = async (dmChannel, week) => {
-    const themeEmbed = new Discord.MessageEmbed()
-        .setColor("db48cf")
-        .setTitle(`Gauntlet Theme`)
-        .setDescription(`
+  const themeEmbed = new Discord.MessageEmbed()
+    .setColor("db48cf")
+    .setTitle(`Gauntlet Theme`).setDescription(`
         What is the Gauntlet's theme?
         `);
-    dmChannel.send(themeEmbed)
-    const filter = (m) => m.author.id === dmChannel.recipient.id;
-    const themeCollector = new Discord.MessageCollector(
-        dmChannel,
-        filter,
-        { max: 1 }
+  dmChannel.send(themeEmbed);
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const themeCollector = new Discord.MessageCollector(dmChannel, filter, {
+    max: 1,
+  });
+
+  themeCollector.on("collect", async (themeReply) => {
+    await GauntletWeek.updateOne(
+      { week: week },
+      {
+        theme: themeReply.content,
+      }
     );
+  });
 
-    themeCollector.on("collect", async (themeReply) => {
-        await GauntletWeek.updateOne({ week: week }, {
-            theme: themeReply.content
-        })
-    })
-
-    themeCollector.on("end", (collected) => {
-        const updateEmbed = new Discord.MessageEmbed()
-            .setColor("#2cff14")
-            .setTitle(`Theme updated`)
-        dmChannel.send(updateEmbed)
-    })
-}
+  themeCollector.on("end", (collected) => {
+    const updateEmbed = new Discord.MessageEmbed()
+      .setColor("#2cff14")
+      .setTitle(`Theme updated`);
+    dmChannel.send(updateEmbed);
+  });
+};
 
 const setGauntletDescription = async (dmChannel, week) => {
-    const descriptionEmbed = new Discord.MessageEmbed()
-        .setColor("#db48cf")
-        .setTitle(`Gauntlet Description`)
-        .setDescription(`
+  const descriptionEmbed = new Discord.MessageEmbed()
+    .setColor("#db48cf")
+    .setTitle(`Gauntlet Description`).setDescription(`
         What is the Gauntlet's Description?
         `);
-    dmChannel.send(descriptionEmbed)
-    const filter = (m) => m.author.id === dmChannel.recipient.id;
-    const descCollector = new Discord.MessageCollector(
-        dmChannel,
-        filter,
-        { max: 1 }
+  dmChannel.send(descriptionEmbed);
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const descCollector = new Discord.MessageCollector(dmChannel, filter, {
+    max: 1,
+  });
+
+  descCollector.on("collect", async (descReply) => {
+    await GauntletWeek.updateOne(
+      { week: week },
+      {
+        description: descReply.content,
+      }
     );
+  });
 
-    descCollector.on("collect", async (descReply) => {
-        await GauntletWeek.updateOne({ week: week }, {
-            description: descReply.content
-        })
-    })
-
-    descCollector.on("end", (collected) => {
-        const descriptionEmbed = new Discord.MessageEmbed()
-            .setColor("#2cff14")
-            .setTitle(`Description updated`)
-        dmChannel.send(descriptionEmbed)
-    })
-
-
-}
+  descCollector.on("end", (collected) => {
+    const descriptionEmbed = new Discord.MessageEmbed()
+      .setColor("#2cff14")
+      .setTitle(`Description updated`);
+    dmChannel.send(descriptionEmbed);
+  });
+};
 
 const setActiveWeek = async (dmChannel) => {
-    const activeEmbed = new Discord.MessageEmbed()
-        .setColor("#db48cf")
-        .setTitle(`Active Week`)
-        .setDescription(`
+  const activeEmbed = new Discord.MessageEmbed()
+    .setColor("#db48cf")
+    .setTitle(`Active Week`).setDescription(`
         Which week do you want to set active?
         `);
-    dmChannel.send(activeEmbed)
-    const filter = (m) => m.author.id === dmChannel.recipient.id;
-    const activeCollector = new Discord.MessageCollector(
-        dmChannel,
-        filter,
-    );
+  dmChannel.send(activeEmbed);
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const activeCollector = new Discord.MessageCollector(dmChannel, filter);
 
-    activeCollector.on("collect", async (activeReply) => {
-        if (isNum(activeReply)) {
-            let weekNum = parseInt(activeReply.content)
-            let weekExists = await GauntletWeek.exists({ week: weekNum })
+  activeCollector.on("collect", async (activeReply) => {
+    if (isNum(activeReply)) {
+      let weekNum = parseInt(activeReply.content);
+      let weekExists = await GauntletWeek.exists({ week: weekNum });
 
-            if (weekExists) {
-                let currentActive = await GauntletWeek.find({ active: true })
+      if (weekExists) {
+        let currentActive = await GauntletWeek.find({ active: true });
 
-                if (currentActive.week === weekNum) {
-                    activeReply.reply("That week already is set as Active\n\nPlease select another or cancel")
-                        .then(msg => { msg.delete({ timeout: 5000 }) })
-
-                } else {
-                    await GauntletWeek.updateOne({ active: true }, {
-                        active: false
-                    })
-                    await GauntletWeek.updateOne({ week: weekNum }, {
-                        active: true
-                    })
-
-                    const updatedEmbed = new Discord.MessageEmbed()
-                        .setColor("#2cff14")
-                        .setTitle(`Active Week Set`)
-                        .setDescription(`
-                        Active week set to ${weekNum}
-                        `)
-                    dmChannel.send(updatedEmbed)
-                    activeCollector.stop()
-                }
-
-            } else {
-                activeReply.reply("That week does not exist please choose another one \n or send cancel")
-                    .then(msg => { msg.delete({ timeout: 5000 }) })
-
-            }
-        } else if (activeReply.content.toLowerCase() === "cancel") {
-            activeReply.reply("Action cancelled :)")
-                .then(msg => { msg.delete({ timeout: 5000 }) })
-            activeCollector.stop()
-
+        if (currentActive.week === weekNum) {
+          activeReply
+            .reply(
+              "That week already is set as Active\n\nPlease select another or cancel"
+            )
+            .then((msg) => {
+              msg.delete({ timeout: 5000 });
+            });
         } else {
-            activeReply.reply("Please respond with a number or cancel")
-                .then(msg => { msg.delete({ timeout: 5000 }) })
+          await GauntletWeek.updateOne(
+            { active: true },
+            {
+              active: false,
+            }
+          );
+          await GauntletWeek.updateOne(
+            { week: weekNum },
+            {
+              active: true,
+            }
+          );
+
+          const updatedEmbed = new Discord.MessageEmbed()
+            .setColor("#2cff14")
+            .setTitle(`Active Week Set`).setDescription(`
+                        Active week set to ${weekNum}
+                        `);
+          dmChannel.send(updatedEmbed);
+          activeCollector.stop();
         }
-    })
+      } else {
+        activeReply
+          .reply(
+            "That week does not exist please choose another one \n or send cancel"
+          )
+          .then((msg) => {
+            msg.delete({ timeout: 5000 });
+          });
+      }
+    } else if (activeReply.content.toLowerCase() === "cancel") {
+      activeReply.reply("Action cancelled :)").then((msg) => {
+        msg.delete({ timeout: 5000 });
+      });
+      activeCollector.stop();
+    } else {
+      activeReply
+        .reply("Please respond with a number or cancel")
+        .then((msg) => {
+          msg.delete({ timeout: 5000 });
+        });
+    }
+  });
+};
 
-}
+const setSubmissionStatus = async (dmChannel) => {
+  const statusEmbed = new Discord.MessageEmbed()
+    .setColor("#db48cf")
+    .setTitle(`Submission Status`).setDescription(`
+        What do you want to set the status as?
+        
+        Please respond with "open" or "closed"
+        `);
+  dmChannel.send(statusEmbed);
+  const filter = (m) => m.author.id === dmChannel.recipient.id;
+  const statusCollector = new Discord.MessageCollector(dmChannel, filter);
 
+  statusCollector.on("collect", async (reply) => {
+    if (reply.content === "open") {
+      await GauntletWeek.updateOne(
+        { active: true },
+        {
+          accepting_submissions: true,
+        }
+      ).catch((err) => {
+        console.error(err);
+      });
+      const updatedEmbed = new Discord.MessageEmbed()
+        .setColor("#2cff14")
+        .setTitle(`Submission Status Set`)
+        .setDescription(`Submissions Open`);
+      dmChannel.send(updatedEmbed);
+      statusCollector.stop();
+    } else if (reply.content === "closed") {
+      await GauntletWeek.updateOne(
+        { active: true },
+        {
+          accepting_submissions: false,
+        }
+      ).catch((err) => {
+        console.error(err);
+      });
+      const updatedEmbed = new Discord.MessageEmbed()
+        .setColor("#2cff14")
+        .setTitle(`Submission Status Set`)
+        .setDescription(`Submissions Closed`);
+      dmChannel.send(updatedEmbed);
+      statusCollector.stop();
+    } else {
+      reply.reply("Please respond with open or closed").then((msg) => {
+        msg.delete({ timeout: 5000 });
+      });
+    }
+  });
+};
 
 const isNum = (string) => {
-    let isNumFunc = /^\d+$/.test(string);
-    return isNumFunc
-}
+  let isNumFunc = /^\d+$/.test(string);
+  return isNumFunc;
+};
 
 module.exports = {
-    addGauntletStart,
-    editGauntletStart,
-    setActiveWeek
-}
+  addGauntletStart,
+  editGauntletStart,
+  setActiveWeek,
+  setSubmissionStatus,
+};

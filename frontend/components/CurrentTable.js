@@ -64,6 +64,8 @@ export default function CurrentWeekTable() {
 
     return (
         <>
+            <h2>Week: {data.week_info.week} </h2>
+            <h2>Theme: {data.week_info.theme}</h2>
             <Row style={{ marginBottom: "10px" }}>
                 <Col>
                     <Statistic title="# of Submissons" value={data.submissions.length} style={{ padding: "30px", margin: "0px 10px 10px 0px", background: "#212121" }} />

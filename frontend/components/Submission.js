@@ -15,7 +15,7 @@ const { Title } = Typography;
 
 export default function Submission(props) {
   const { submissionData } = props;
-  console.log(submissionData.files);
+  console.log(submissionData);
   return (
     <>
       <Row>
@@ -24,8 +24,7 @@ export default function Submission(props) {
             <Card title="Submission By:" style={{ margin: "0px 10px 0px 0px" }}>
               <div style={{ textAlign: "center" }}>
                 <Avatar size={64} src={submissionData.user.user_pic} />
-                <Title level={4}>{submissionData.user.username}</Title>
-              </div>
+                <Title level={4}>{submissionData.user.username}</Title> </div>
             </Card>
             {submissionData.images.length > 0 ? (
               <Card title="Images:" style={{ margin: "10px 10px 0px 0px" }}>
@@ -59,6 +58,13 @@ export default function Submission(props) {
                   })}
 
                 </ul>
+              </Card>
+            ) : (
+              <></>
+            )}
+            {submissionData.vod_link.length > 0 ? (
+              <Card title="Vod Link:" style={{ margin: "10px 10px 0px 0px" }}>
+                <a href={submissionData.vod_link}>Watch Review</a>
               </Card>
             ) : (
               <></>

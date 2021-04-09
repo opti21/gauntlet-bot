@@ -14,7 +14,7 @@
     "cross-env": "^7.0.3",
     "dayjs": "^1.10.4",
     "discord-markdown": "^2.4.2",
-    "discord.js": "^12.5.1",
+    "discord.js": "^12.5.3",
     "graphql": "^15.5.0",
     "mongodb": "^3.6.4",
     "mongoose": "^5.12.0",
