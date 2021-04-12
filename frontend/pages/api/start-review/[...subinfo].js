@@ -1,7 +1,4 @@
 require("dotenv").config();
-const Discord = require("discord.js");
-const dClient = new Discord.Client();
-dClient.login(process.env.DISCORD_TOKEN);
 const axios = require("axios").default;
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
