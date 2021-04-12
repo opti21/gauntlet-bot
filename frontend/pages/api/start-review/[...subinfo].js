@@ -135,7 +135,6 @@ export default async (req, res) => {
               // update discord message
               let doc = document.value;
               let attachments = JSON.parse(doc.attachments);
-              let SUBMISSION_CHANNEL = "761805260691865600";
 
               let fileStr = "";
 

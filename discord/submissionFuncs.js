@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const Submission = require("./Models/Submissions");
 const GauntletWeeks = require("./Models/GauntletWeeks");
 
-const SUBMISSION_CHANNEL = "761805260691865600";
+const SUBMISSION_CHANNEL = process.env.SUBMISSION_CHANNEL;
 
 const newSubmissionStart = async (dmChannel, dClient) => {
   // console.log(dmChannel);
