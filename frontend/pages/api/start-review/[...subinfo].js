@@ -141,17 +141,6 @@ export default async (req, res) => {
                 });
               }
 
-              const updatedEmbed = new Discord.MessageEmbed()
-                .setColor("#db48cf")
-                .setTitle(`${doc.username}'s week ${doc.week} submission`)
-                .setDescription(`
-    						**Description:** ${doc.description}
-
-								Vod Link: ${doc.vod_link}
-
- 								${fileStr}
-    					`);
-
               const response = await fetch(process.env.DISCORD_WEBHOOK, {
                 method: "POST",
                 headers: {
