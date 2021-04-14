@@ -1,7 +1,8 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const submissionSchema = new Schema({
+const submissionSchema = new Schema(
+  {
     locked: Boolean,
     editing: Boolean,
     week: Number,
@@ -11,26 +12,27 @@ const submissionSchema = new Schema({
     nickname: String,
     description: String,
     attachments: {
-        type: String,
-        default: "[]"
+      type: String,
+      default: "[]",
     },
     submitted: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     reviewed: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     vod_link: {
-        type: String,
-        default: "",
+      type: String,
+      default: "",
     },
-    discord_message: String
-},
-    {
-        timestamps: true
-    }
-)
+    discord_message: String,
+    react_discord_msg: String,
+  },
+  {
+    timestamps: true,
+  }
+);
 
-module.exports = mongoose.model('Submission', submissionSchema)
+module.exports = mongoose.model("Submission", submissionSchema);

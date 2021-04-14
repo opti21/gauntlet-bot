@@ -3,6 +3,7 @@ const Submission = require("./Models/Submissions");
 const GauntletWeeks = require("./Models/GauntletWeeks");
 
 const SUBMISSION_CHANNEL = process.env.SUBMISSION_CHANNEL;
+const REACTION_CHANNEL = process.env.REACTION_CHANNEL;
 
 const newSubmissionStart = async (dmChannel, dClient) => {
   // console.log(dmChannel);
@@ -516,6 +517,8 @@ const postToDiscord = async (doc, dClient) => {
   }
 
   let submissionChannel = await dClient.channels.fetch(SUBMISSION_CHANNEL);
+  let reactionChannel = await dClient.channels.fetch(REACTION_CHANNEL);
+
   const submissionEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
     .setTitle(`${doc.username}'s week ${doc.week} submission`).setDescription(`
@@ -530,6 +533,20 @@ const postToDiscord = async (doc, dClient) => {
       doc._id,
       {
         discord_message: msg.id,
+      },
+      { new: true },
+      (updatedDoc) => {
+        return updatedDoc;
+      }
+    );
+  });
+
+  reactionChannel.send(submissionEmbed).then(async (msg) => {
+    console.log(msg.id);
+    await Submission.findByIdAndUpdate(
+      doc._id,
+      {
+        react_discord_msg: msg.id,
       },
       { new: true },
       (updatedDoc) => {
@@ -559,9 +576,18 @@ const editDiscordMessage = async (doc, dClient) => {
     `);
 
   let submissionChannel = await dClient.channels.fetch(SUBMISSION_CHANNEL);
+  let reactionChannel = await dClient.channels.fetch(REACTION_CHANNEL);
+
   let oldMessage = await submissionChannel.messages.fetch(doc.discord_message);
   oldMessage.edit(updatedEmbed).then((res) => {
     console.log("Message updated");
+  });
+
+  let oldReactMessage = await reactionChannel.messages.fetch(
+    doc.react_discord_msg
+  );
+  oldReactMessage.edit(updatedEmbed).then((res) => {
+    console.log("Reaction Message updated");
   });
 };
 

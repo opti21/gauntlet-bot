@@ -103,14 +103,16 @@ dClient.on("message", async (message) => {
   }
 
   if (command === "week") {
-    fs.readFile("gauntletInfo.json", (err, data) => {
+    fs.readFile("gauntletInfo.json", async (err, data) => {
       if (err) console.log(err);
-      let gauntletInfo = JSON.parse(data);
+      const gauntletInfo = await GauntletWeeks.findOne({
+        active: true,
+      });
       console.log(gauntletInfo);
       const infoEmbed = new Discord.MessageEmbed()
         .setColor("db48cf")
         .setTitle(
-          `Week ${gauntletInfo.week}'s Gauntlet is **${gauntletInfo.title}**`
+          `Week ${gauntletInfo.week}'s Gauntlet theme is **${gauntletInfo.theme}**`
         )
         .setDescription(`${gauntletInfo.description}`);
 
