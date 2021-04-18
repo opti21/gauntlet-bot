@@ -80,6 +80,7 @@ const addGauntlet = async (dmChannel, week) => {
   let newGauntletWeek = new GauntletWeek({
     week: week,
     editing: true,
+    accepting_submissions: true,
   });
   newGauntletWeek.save();
   const titleEmbed = new Discord.MessageEmbed()

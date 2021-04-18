@@ -9,7 +9,7 @@ const submissionFuncs = require("./submissionFuncs");
 const GauntletWeeks = require("./Models/GauntletWeeks");
 
 mongoose.connect(
-  `mongodb+srv://gauntlet:${process.env.MONGO_PASS}@cluster0.9bvpn.mongodb.net/gauntlet?retryWrites=true&w=majority`,
+  `mongodb+srv://gauntlet:${process.env.MONGO_PASS}@cluster0.9bvpn.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`,
   { useNewUrlParser: true, useUnifiedTopology: true }
 );
 const db = mongoose.connection;
