@@ -1,27 +1,29 @@
 ☐ Create README
 Frontend:
   next.js Next auth
-  ✔ Add twitch Auth @done(21-03-12 02:34)
-  ✔ Figure out how to get URIs to match for auth @done(21-03-12 19:33)
-  ✔ Check that user's session is active when accessing api @done(21-03-15 21:33)
-  ✔ Create a vod link to give to viewer @done(21-03-24 02:09)
-  ✔ Create app Token and store it @done(21-03-24 17:35)
-    ✔ create function to check for it @done(21-03-24 17:35)
-  
+  ✔ Let users be able to past submissions @done(21-04-21 00:23)
+  ☐ Add login button to header
+  ☐ Change auth to discord
   ☐ combine header and footer into one file
   ☐ Create Better index page
     ☐ Add countdown to next Gauntlet
   ☐ Add Submission status
     Shows if they can still submit or not
   ☐ Add moderating tools
-  ☐ Let users without admin rights be able to view submissions
+  ✔ Add twitch Auth @done(21-03-12 02:34)
+  ✔ Figure out how to get URIs to match for auth @done(21-03-12 19:33)
+  ✔ Check that user's session is active when accessing api @done(21-03-15 21:33)
+  ✔ Create a vod link to give to viewer @done(21-03-24 02:09)
+  ✔ Create app Token and store it @done(21-03-24 17:35)
+    ✔ create function to check for it @done(21-03-24 17:35)
+  ✔ Let users without admin rights be able to view submissions @done(21-04-20 22:49)
 
 Discord:
   ☐ Add opt-in to get pinged when review is started
   ☐ Create ping when user's submission is being reviewed
     * <user> Billy is starting to review your submission
     * Attach vod link with offset
-  ☐ Add cut off command
+  ✔ Add cut off command @done(21-04-21 00:27)
     * When user goes to make a new submission it
       will check to see if they are able to submit
       if not it will let them know

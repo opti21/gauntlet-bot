@@ -1,36 +1,28 @@
-import { useSession } from 'next-auth/client'
-import GauntletWeeksTable from '../components/tables'
-import { Layout, Menu } from 'antd'
-import Gfooter from '../components/Gfooter';
-import Link from 'next/link';
-import Head from 'next/head'
-import Gheader from '../components/Gheader';
+import PreviousWeeksTable from "../components/tables";
+import { Layout } from "antd";
+import Gfooter from "../components/Gfooter";
+import Link from "next/link";
+import Head from "next/head";
+import Gheader from "../components/Gheader";
 
-const { Header, Content } = Layout;
+const { Content } = Layout;
 
 export default function Dashboard() {
-
-  const [session, loading] = useSession()
-
-  return <>
-    <Head>
-      <title>Gauntlet Bot - Previous Weeks</title>
-    </Head>
-    <Layout className="layout">
-      <Gheader activePage='2' />
-      <Content style={{ padding: '0 50px' }}>
-        <h1>Previous Weeks</h1>
-        {session ?
-          <GauntletWeeksTable /> :
-          <Link href="/api/auth/signin"><a>Sign in</a></Link>
-        }
-      </Content>
-      <Gfooter />
-
-    </Layout>
-  </>
-
-
+  return (
+    <>
+      <Head>
+        <title>Gauntlet Bot - Previous Weeks</title>
+      </Head>
+      <Layout className="layout">
+        <Gheader activePage="2" />
+        <Content style={{ padding: "0 50px" }}>
+          <h1>Previous Weeks</h1>
+          <PreviousWeeksTable />
+        </Content>
+        <Gfooter />
+      </Layout>
+    </>
+  );
 }
 
 // export const getServerSideProps = async (ctx) => {

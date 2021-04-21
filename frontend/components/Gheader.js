@@ -10,7 +10,8 @@ export default function Gheader(props) {
         <div style={{ float: "left", width: "150px", height: "20px" }}>
           <p style={{ fontSize: "20px" }}>Gauntlet Bot</p>
         </div>
-        <div style={{ float: "left", width: "150px", height: "20px" }}></div>
+        {/* TODO: Add login button */}
+        {/* <div style={{ float: "left", width: "150px", height: "20px" }}></div> */}
         <Menu
           theme="dark"
           mode="horizontal"
