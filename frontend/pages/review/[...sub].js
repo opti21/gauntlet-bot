@@ -48,14 +48,14 @@ export default function Review() {
         <BackTop />
         <Gheader />
         <Content style={{ padding: "0 50px" }}>
-          <Breadcrumb style={{ marginTop: "10px", marginBottom: "10px" }}>
+          {/* <Breadcrumb style={{ marginTop: "10px", marginBottom: "10px" }}>
             <Breadcrumb.Item>
               <Link href="/current">
                 <a>Current Week</a>
               </Link>
             </Breadcrumb.Item>
             <Breadcrumb.Item>Submission</Breadcrumb.Item>
-          </Breadcrumb>
+          </Breadcrumb> */}
           {data ? (
             <>
               {data.submissionData.exists ? (

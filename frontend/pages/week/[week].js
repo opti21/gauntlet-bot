@@ -18,7 +18,6 @@ export default function Current({ weekData }) {
       <Layout className="layout">
         <Gheader activePage={"2"} />
         <Content style={{ padding: "0 50px" }}>
-          <Title style={{ marginTop: "10px" }}>Current Week</Title>
           <WeekTable weekData={{ weekData }} />
         </Content>
         <Gfooter />
