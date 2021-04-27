@@ -204,7 +204,7 @@ const reviewSubmission = async (dmChannel, dClient) => {
       reviewCollector.stop();
     } else if (reviewAnswer.content.toLowerCase() === "no") {
       // TODO
-      editSubmission(dmChannel, dClient);
+      editSubmission(dmChannel, null, dClient);
       reviewCollector.stop();
     } else {
       reviewAnswer.reply(`Please respond with yes or no`).then((m) => {

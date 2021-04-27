@@ -8,7 +8,7 @@ import Head from "next/head";
 import Gheader from "../components/Gheader";
 import CurrentWeekTable from "../components/CurrentTable";
 
-export default function Current() {
+export default function Current(props) {
   const [session, loading] = useSession();
 
   return (
@@ -20,7 +20,7 @@ export default function Current() {
         <Gheader activePage={"1"} />
         <Content style={{ padding: "0 50px" }}>
           <Title style={{ marginTop: "10px" }}>Current Week</Title>
-          <CurrentWeekTable />
+          <CurrentWeekTable data={{}} />
         </Content>
         <Gfooter />
       </Layout>
@@ -28,18 +28,18 @@ export default function Current() {
   );
 }
 
-// export const getServerSideProps = async (ctx) => {
-//   console.log(ctx)
-//   const weeks = await fetch(process.env.NEXTAUTH_URL + '/api/get-weeks')
-//     .then(response => response.json())
-//     .then(data => {
-//       return data
-//     })
-//   console.log(weeks)
+export const getServerSideProps = async (ctx) => {
+  console.log(ctx);
+  const weeks = await fetch(process.env.NEXTAUTH_URL + "/api/get-weeks")
+    .then((response) => response.json())
+    .then((data) => {
+      return data;
+    });
+  console.log(weeks);
 
-//   return {
-//     props: {
-//       weeks: weeks
-//     }
-//   }
-// }
+  return {
+    props: {
+      weeks: weeks,
+    },
+  };
+};

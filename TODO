@@ -2,6 +2,7 @@
 Frontend:
   next.js Next auth
   ✔ Let users be able to past submissions @done(21-04-21 00:23)
+  ☐ Figure out how to parse discord markdown
   ☐ Add login button to header
   ☐ Change auth to discord
   ☐ combine header and footer into one file
@@ -19,6 +20,8 @@ Frontend:
   ✔ Let users without admin rights be able to view submissions @done(21-04-20 22:49)
 
 Discord:
+  ✔ Fix editing functions @done(21-04-26 23:14)
+  ☐ Can emotes be parsed into URLs?
   ☐ Add opt-in to get pinged when review is started
   ☐ Create ping when user's submission is being reviewed
     * <user> Billy is starting to review your submission

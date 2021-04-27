@@ -47,7 +47,7 @@ export default function Review() {
       <Layout className="layout">
         <BackTop />
         <Gheader />
-        <Content style={{ padding: "0 50px" }}>
+        <Content style={{ padding: "30px 50px" }}>
           {/* <Breadcrumb style={{ marginTop: "10px", marginBottom: "10px" }}>
             <Breadcrumb.Item>
               <Link href="/current">
