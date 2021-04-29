@@ -9,6 +9,7 @@
   "author": "opti21",
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "^2.21.2",
     "aws-sdk": "^2.824.0",
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
@@ -17,6 +18,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "nodemon": "^2.0.7",
+    "prisma": "^2.21.2"
   }
 }

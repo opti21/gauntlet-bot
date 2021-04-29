@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model gauntlet_weeks {
+  active                Boolean?      @default(false)
+  accepting_submissions Boolean?      @default(true)
+  week                  Int           @id
+  theme                 String?       @db.VarChar
+  description           String?       @db.VarChar
+  editing               Boolean?
+  submissions           submissions[]
+}
+
+model submissions {
+  editing                                    Boolean?
+  description                                String?        @db.VarChar
+  submitted                                  Boolean        @default(false)
+  reviewed                                   Boolean        @default(false)
+  vod_link                                   String?        @db.VarChar
+  discord_message                            String?        @db.VarChar
+  react_discord_message                      String?        @db.VarChar
+  id                                         BigInt         @id @default(autoincrement())
+  gauntlet_week                              Int
+  attachments                                String[]       @db.VarChar
+  user                                       BigInt?
+  gauntlet_weeks                             gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])
+  users_submissions_userTousers              users?         @relation("submissions_userTousers", fields: [user], references: [id])
+  users_submissionsTousers_currently_editing users[]        @relation("submissionsTousers_currently_editing")
+}
+
+model users {
+  id                                               BigInt        @id
+  user_pic                                         String?       @db.VarChar
+  username                                         String?       @db.VarChar
+  twitch_username                                  String?       @db.VarChar
+  currently_editing                                BigInt?
+  submissions_submissionsTousers_currently_editing submissions?  @relation("submissionsTousers_currently_editing", fields: [currently_editing], references: [id])
+  submissions_submissions_userTousers              submissions[] @relation("submissions_userTousers")
+}

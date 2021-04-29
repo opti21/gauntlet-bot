@@ -1,6 +1,5 @@
 const Discord = require("discord.js");
-const Submission = require("./Models/Submissions");
-const GauntletWeeks = require("./Models/GauntletWeeks");
+const { prisma } = require("./util/prisma");
 
 const SUBMISSION_CHANNEL = process.env.SUBMISSION_CHANNEL;
 const REACTION_CHANNEL = process.env.REACTION_CHANNEL;
@@ -17,19 +16,11 @@ const newSubmissionStart = async (dmChannel, dClient) => {
             If discord can handle the file size of your project then you can upload them on the next step`);
   dmChannel.send(submitEmbed);
 
-  let gauntletInfo = await GauntletWeeks.findOne({ active: true });
+  const gauntletInfo = await prisma.gauntlet_weeks.findFirst({
+    where: { active: true },
+  });
 
   // console.log(dmChannel.recipient.avatarURL())
-
-  let newSubmission = new Submission({
-    locked: false,
-    editing: true,
-    user: dmChannel.recipient.id,
-    user_pic: dmChannel.recipient.avatarURL({ format: "png", dynamic: true }),
-    username: dmChannel.recipient.username,
-    week: gauntletInfo.week,
-  });
-  newSubmission.save();
 
   const filter = (m) => m.author.id === dmChannel.recipient.id;
   const descriptionCollector = new Discord.MessageCollector(
@@ -41,12 +32,30 @@ const newSubmissionStart = async (dmChannel, dClient) => {
   descriptionCollector.on("collect", async (m) => {
     if (m.content.length > 0) {
       console.log(`Collected ${m.content}`);
-      await Submission.updateOne(
-        { user: m.author.id, editing: true },
-        {
-          description: m.content,
-        }
-      );
+      const newSubmission = await prisma.submissions
+        .create({
+          data: {
+            editing: true,
+            user: parseInt(dmChannel.recipient.id),
+            gauntlet_week: gauntletInfo.week,
+            description: m.content,
+          },
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+
+      await prisma.users
+        .update({
+          where: { id: parseInt(dmChannel.recipient.id) },
+          data: {
+            currently_editing: newSubmission.id,
+          },
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+
       descriptionCollector.stop();
     } else {
       m.reply("No text detected please enter text to continue").then((m) => {
@@ -105,24 +114,26 @@ const collectFiles = async (dmChannel, dClient) => {
 
   fileCollector.on("collect", async (fileM) => {
     if (fileM.content.toLowerCase() != "done") {
-      let submission = await Submission.findOne({
-        user: dmChannel.recipient.id,
-        editing: true,
-      });
-      let attachmentsArray = JSON.parse(submission.attachments);
-
       // console.log(fileM.attachments.size)
       if (fileM.attachments.size > 0) {
         // There are attachments in this message
-        attachmentsArray.push(fileM.attachments.first().url);
 
-        await Submission.findByIdAndUpdate(
-          submission._id,
-          {
-            attachments: JSON.stringify(attachmentsArray),
-          },
-          { useFindAndModify: false }
-        );
+        const user = await getUser(dmChannel.recipient.id);
+
+        await prisma.submissions
+          .update({
+            where: {
+              id: user.currently_editing,
+            },
+            data: {
+              attachments: {
+                push: fileM.attachments.first().url,
+              },
+            },
+          })
+          .catch((e) => {
+            console.error(e);
+          });
       } else {
         // User didn't upload a file or sent random text
         fileM
@@ -147,9 +158,11 @@ const collectFiles = async (dmChannel, dClient) => {
 
 // Review and/or Submit submission
 const reviewSubmission = async (dmChannel, dClient) => {
-  let previewSubmission = await Submission.findOne({
-    user: dmChannel.recipient.id,
-    editing: true,
+  const user = await getUser(dmChannel.recipient.id);
+  const previewSubmission = await prisma.submissions.findUnique({
+    where: {
+      id: user.currently_editing,
+    },
   });
 
   const submissionPreviewEmbed = new Discord.MessageEmbed()
@@ -164,7 +177,7 @@ const reviewSubmission = async (dmChannel, dClient) => {
       **Description:** 
       ${previewSubmission.description}
     `);
-  let previewAttachments = JSON.parse(previewSubmission.attachments);
+  let previewAttachments = previewSubmission.attachments;
 
   previewAttachments.forEach((attachment) => {
     dmChannel.send(attachment);
@@ -177,15 +190,20 @@ const reviewSubmission = async (dmChannel, dClient) => {
 
   reviewCollector.on("collect", async (reviewAnswer) => {
     if (reviewAnswer.content.toLowerCase() === "yes") {
-      let submittedDoc = await Submission.findOneAndUpdate(
-        { user: dmChannel.recipient.id, editing: true },
-        {
-          editing: false,
-          submitted: true,
+      const submittedDoc = await prisma.submissions
+        .update({
+          where: { id: user.currently_editing },
+          data: { submitted: true },
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+
+      await prisma.users.update({
+        where: { id: user.id },
+        data: {
+          currently_editing: null,
         },
-        { new: true }
-      ).then((doc) => {
-        return doc;
       });
 
       console.log(submittedDoc);
@@ -204,7 +222,7 @@ const reviewSubmission = async (dmChannel, dClient) => {
       reviewCollector.stop();
     } else if (reviewAnswer.content.toLowerCase() === "no") {
       // TODO
-      editSubmission(dmChannel, null, dClient);
+      editSubmission(dmChannel, previewSubmission.week, dClient);
       reviewCollector.stop();
     } else {
       reviewAnswer.reply(`Please respond with yes or no`).then((m) => {
@@ -243,10 +261,14 @@ const returningUserMenu = async (dmChannel, dClient) => {
   menuStartReplyCollector.on("collect", async (menuReplyMessage) => {
     // console.log(`Collected ${m.content}`);
     if (menuReplyMessage.content === "submit") {
-      let activeWeek = await GauntletWeeks.findOne({ active: true });
-      let submissionExists = await Submission.exists({
-        user: dmChannel.recipient.id,
-        week: activeWeek.week,
+      const activeWeek = await prisma.gauntlet_weeks.findFirst({
+        where: { active: true },
+      });
+      const submissionExists = await prisma.submissions.findFirst({
+        where: {
+          user: parseInt(dmChannel.recipient.id),
+          gauntlet_week: activeWeek.week,
+        },
       });
       if (submissionExists) {
         // User already submitted for current week
@@ -324,15 +346,22 @@ const returningUserMenu = async (dmChannel, dClient) => {
 };
 
 const editSubmissionStartMenu = async (dmChannel, dClient) => {
-  const submissions = await Submission.find({
-    user: dmChannel.recipient.id,
-  });
+  const submissions = await prisma.submissions
+    .findMany({
+      where: { user: parseInt(dmChannel.recipient.id) },
+    })
+    .catch((e) => {
+      console.error(e);
+    });
 
   let userSubmissionsText = "";
 
-  submissions.slice(0, 5).forEach((sub) => {
+  submissions.slice(0, 6).forEach((sub) => {
     console.log(sub);
-    userSubmissionsText += `${sub.week}: ${sub.description.slice(0, 50)}...\n`;
+    userSubmissionsText += `${sub.gauntlet_week}: ${sub.description.slice(
+      0,
+      50
+    )}...\n`;
   });
 
   const editMenuStartEmbed = new Discord.MessageEmbed()
@@ -360,9 +389,11 @@ const editSubmissionStartMenu = async (dmChannel, dClient) => {
   editMenuStartReplyCollector.on("collect", async (reply) => {
     if (isNum(reply.content)) {
       // Reply is a number
-      let submissionExists = await Submission.findOne({
-        user: dmChannel.recipient.id,
-        week: parseInt(reply.content),
+      const submissionExists = await prisma.submissions.findFirst({
+        where: {
+          user: parseInt(dmChannel.recipient.id),
+          gauntlet_week: parseInt(reply.content),
+        },
       });
       if (!submissionExists) {
         // Submission doesn't exist
@@ -400,24 +431,18 @@ const editSubmissionStartMenu = async (dmChannel, dClient) => {
 };
 
 const editSubmission = async (dmChannel, week, dClient) => {
-  let submission;
-  if (week) {
-    console.log("week provided");
-    submission = await Submission.findOne({
-      user: dmChannel.recipient.id,
-      week: week,
-    });
-  } else {
-    console.log("week not provided");
-    submission = await Submission.findOne({
-      user: dmChannel.recipient.id,
-      editing: true,
-    });
-  }
-  const questionEmbed = new Discord.MessageEmbed().setColor("#00fa6c")
-    .setTitle(`
-        What would you like to edit?
-        `).setDescription(`
+  const submission = await prisma.submissions.findFirst({
+    where: {
+      user: parseInt(dmChannel.recipient.id),
+      gauntlet_week: week,
+    },
+  });
+
+  // TODO: add check for actual number provided for week
+  // Send response if not or error
+  const questionEmbed = new Discord.MessageEmbed()
+    .setColor("#00fa6c")
+    .setTitle(`What would you like to edit?`).setDescription(`
         1: Description
         2: Files (This will clear current files)
         3: Cancel
@@ -473,30 +498,49 @@ const editDescription = async (dmChannel, submission, dClient) => {
   });
 
   descriptionCollector.on("collect", async (reply) => {
-    try {
-      Submission.findOneAndUpdate(
-        { user: dmChannel.recipient.id, week: submission.week },
-        { description: reply.content, editing: true },
-        { new: true, useFindAndModify: false },
-        (err, newDoc) => {
-          console.log(newDoc);
-          if (newDoc.submitted) {
-            // Submission has already been submitted
-            const submitEmbed = new Discord.MessageEmbed()
-              .setColor("#00fa6c")
-              .setTitle(`Descrption updated`);
+    const newDoc = await prisma.submissions
+      .update({
+        where: { id: submission.id },
+        data: { description: reply.content },
+      })
+      .catch((e) => {
+        console.error(e);
+      });
 
-            editDiscordMessage(newDoc, dClient);
+    await prisma.users
+      .update({
+        where: { id: submission.user },
+        data: {
+          currently_editing: submission.id,
+        },
+      })
+      .catch((e) => {
+        console.error(e);
+      });
 
-            dmChannel.send(submitEmbed);
-          } else {
-            // Submission has not been submitted yet
-            reviewSubmission(dmChannel, dClient);
-          }
-        }
-      );
-    } catch (e) {
-      console.error(e);
+    if (newDoc.submitted) {
+      // Submission has already been submitted
+      const submitEmbed = new Discord.MessageEmbed()
+        .setColor("#00fa6c")
+        .setTitle(`Descrption updated`);
+
+      await prisma.users
+        .update({
+          where: { id: submission.user },
+          data: {
+            currently_editing: null,
+          },
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+
+      editDiscordMessage(newDoc, dClient);
+
+      dmChannel.send(submitEmbed);
+    } else {
+      // Submission has not been submitted yet
+      reviewSubmission(dmChannel, dClient);
     }
   });
 
@@ -506,7 +550,9 @@ const editDescription = async (dmChannel, submission, dClient) => {
 };
 
 const postToDiscord = async (doc, dClient) => {
-  let attachments = JSON.parse(doc.attachments);
+  const attachments = doc.attachments;
+
+  const user = await getUser(doc.user);
 
   let fileStr = "";
 
@@ -521,7 +567,8 @@ const postToDiscord = async (doc, dClient) => {
 
   const submissionEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
-    .setTitle(`${doc.username}'s week ${doc.week} submission`).setDescription(`
+    .setTitle(`${user.username}'s week ${doc.gauntlet_week} submission`)
+    .setDescription(`
     **Description:** ${doc.description}
 
     ${fileStr}
@@ -529,35 +576,40 @@ const postToDiscord = async (doc, dClient) => {
 
   submissionChannel.send(submissionEmbed).then(async (msg) => {
     console.log(msg.id);
-    await Submission.findByIdAndUpdate(
-      doc._id,
-      {
-        discord_message: msg.id,
-      },
-      { new: true },
-      (updatedDoc) => {
-        return updatedDoc;
-      }
-    );
+    await prisma.submissions
+      .update({
+        where: {
+          id: doc.id,
+        },
+        data: { discord_message: msg.id },
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   });
 
   reactionChannel.send(submissionEmbed).then(async (msg) => {
     console.log(msg.id);
-    await Submission.findByIdAndUpdate(
-      doc._id,
-      {
-        react_discord_msg: msg.id,
-      },
-      { new: true },
-      (updatedDoc) => {
-        return updatedDoc;
-      }
-    );
+    await prisma.submissions
+      .update({
+        where: {
+          id: doc.id,
+        },
+        data: { react_discord_message: msg.id },
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   });
 };
 
 const editDiscordMessage = async (doc, dClient) => {
-  let attachments = JSON.parse(doc.attachments);
+  const submission = await prisma.submissions.findFirst({
+    where: { id: doc.id },
+  });
+  const attachments = submission.attachments;
+  const user = await getUser(submission.user);
+  console.log(attachments);
 
   let fileStr = "";
 
@@ -569,8 +621,9 @@ const editDiscordMessage = async (doc, dClient) => {
 
   const updatedEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
-    .setTitle(`${doc.username}'s week ${doc.week} submission`).setDescription(`
-    **Description:** ${doc.description}
+    .setTitle(`${user.username}'s week ${submission.gauntlet_week} submission`)
+    .setDescription(`
+    **Description:** ${submission.description}
 
     ${fileStr}
     `);
@@ -579,13 +632,15 @@ const editDiscordMessage = async (doc, dClient) => {
   let reactionChannel = await dClient.channels.fetch(REACTION_CHANNEL);
 
   let oldMessage = await submissionChannel.messages.fetch(doc.discord_message);
+
   oldMessage.edit(updatedEmbed).then((res) => {
     console.log("Message updated");
   });
 
   let oldReactMessage = await reactionChannel.messages.fetch(
-    doc.react_discord_msg
+    doc.react_discord_message
   );
+
   oldReactMessage.edit(updatedEmbed).then((res) => {
     console.log("Reaction Message updated");
   });
@@ -593,13 +648,29 @@ const editDiscordMessage = async (doc, dClient) => {
 
 const editFiles = async (dmChannel, submission, dClient) => {
   // Clear Files first
-  await Submission.updateOne(
-    { user: dmChannel.recipient.id, week: submission.week },
-    {
-      editing: true,
-      attachments: "[]",
-    }
-  );
+
+  const currentSubmission = await prisma.submissions
+    .update({
+      where: { id: submission.id },
+      data: {
+        attachments: [],
+      },
+    })
+    .catch((e) => {
+      console.error(e);
+    });
+
+  await prisma.users
+    .update({
+      where: { id: currentSubmission.user },
+      data: {
+        currently_editing: currentSubmission.id,
+      },
+    })
+    .catch((e) => {
+      console.error(e);
+    });
+
   const fileInstructionEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
     .setTitle(`Upload files`)
@@ -613,24 +684,24 @@ const editFiles = async (dmChannel, submission, dClient) => {
 
   fileCollector.on("collect", async (fileM) => {
     if (fileM.content.toLowerCase() != "done") {
-      let submission = await Submission.findOne({
-        user: dmChannel.recipient.id,
-        editing: true,
-      });
-      let attachmentsArray = JSON.parse(submission.attachments);
-
       console.log(fileM.attachments.size);
       if (fileM.attachments.size > 0) {
         // There are attachments in this message
-        attachmentsArray.push(fileM.attachments.first().url);
 
-        await Submission.findByIdAndUpdate(
-          submission._id,
-          {
-            attachments: JSON.stringify(attachmentsArray),
-          },
-          { useFindAndModify: false }
-        );
+        await prisma.submissions
+          .update({
+            where: {
+              id: currentSubmission.id,
+            },
+            data: {
+              attachments: {
+                push: fileM.attachments.first().url,
+              },
+            },
+          })
+          .catch((e) => {
+            console.error(e);
+          });
       } else {
         // User didn't upload a file or sent random text
         fileM
@@ -643,12 +714,9 @@ const editFiles = async (dmChannel, submission, dClient) => {
       }
     } else {
       // User is done uploading files
-      let submission = Submission.findOne({
-        user: dmChannel.recipient.id,
-        editing: true,
-      });
-      if (submission.submitted) {
-        editDiscordMessage(submission, dClient);
+
+      if (currentSubmission.submitted) {
+        editDiscordMessage(currentSubmission, dClient);
         const doneEmbed = new Discord.MessageEmbed()
           .setColor("#00fa6c")
           .setTitle(`Files updated`);
@@ -668,15 +736,20 @@ const editFiles = async (dmChannel, submission, dClient) => {
 };
 
 const deleteSubmissionMenu = async (dmChannel, dClient) => {
-  const submissions = await Submission.find({
-    user: dmChannel.recipient.id,
+  const submissions = await prisma.submissions.findMany({
+    where: {
+      user: parseInt(dmChannel.recipient.id),
+    },
   });
 
   let userSubmissionsText = "";
 
   submissions.slice(0, 5).forEach((sub) => {
     console.log(sub);
-    userSubmissionsText += `${sub.week}: ${sub.description.slice(0, 50)}...\n`;
+    userSubmissionsText += `${sub.gauntlet_week}: ${sub.description.slice(
+      0,
+      50
+    )}...\n`;
   });
 
   const deleteInstructionEmbed = new Discord.MessageEmbed()
@@ -693,13 +766,15 @@ const deleteSubmissionMenu = async (dmChannel, dClient) => {
 
   deleteMenuCollector.on("collect", async (reply) => {
     if (isNum(reply.content)) {
-      let submission = await Submission.find({
-        user: dmChannel.recipient.id,
-        week: parseInt(reply.content),
+      const submission = await prisma.submissions.findFirst({
+        where: {
+          user: parseInt(dmChannel.recipient.id),
+          gauntlet_week: parseInt(reply.content),
+        },
       });
 
-      if (submission.length > 0) {
-        deleteSubmission(dmChannel, dClient, submission[0]);
+      if (submission) {
+        deleteSubmission(dmChannel, dClient, submission);
         deleteMenuCollector.stop();
       } else {
         reply
@@ -725,8 +800,10 @@ const deleteSubmission = async (dmChannel, dClient, submission) => {
     .setTitle(`Delete Submission`).setDescription(`
     **Are you sure you want to delete this Submission?**
     🔴🔴**THIS CANNOT BE UNDONE**🔴🔴
+    
+    Reply with yes or no
 
-    **Week:** ${submission.week}
+    **Week:** ${submission.gauntlet_week}
     **Description:**
     ${submission.description}
     `);
@@ -738,9 +815,17 @@ const deleteSubmission = async (dmChannel, dClient, submission) => {
   confirmCollector.on("collect", async (reply) => {
     let answer = reply.content.toLowerCase();
     if (answer === "yes") {
-      let submissionChannel = await dClient.channels.fetch(SUBMISSION_CHANNEL);
-      let oldMessage = await submissionChannel.messages.fetch(
+      const submissionChannel = await dClient.channels.fetch(
+        SUBMISSION_CHANNEL
+      );
+      const reactionChannel = await dClient.channels.fetch(REACTION_CHANNEL);
+
+      const oldMessage = await submissionChannel.messages.fetch(
         submission.discord_message
+      );
+
+      const oldReactionMessage = await reactionChannel.messages.fetch(
+        submission.react_discord_message
       );
 
       oldMessage
@@ -752,12 +837,34 @@ const deleteSubmission = async (dmChannel, dClient, submission) => {
           console.error(err);
         });
 
-      Submission.findByIdAndDelete(submission._id)
+      oldReactionMessage
+        .delete()
         .then((res) => {
-          console.log("Document Deleted");
+          console.log("reaction Message Deleted");
         })
         .catch((err) => {
           console.error(err);
+        });
+
+      await prisma.users
+        .update({
+          where: {
+            id: submission.user,
+          },
+          data: {
+            currently_editing: null,
+          },
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+
+      await prisma.submissions
+        .delete({
+          where: { id: submission.id },
+        })
+        .catch((e) => {
+          console.error(e);
         });
 
       const deleteFinishedEmbed = new Discord.MessageEmbed()
@@ -779,6 +886,20 @@ const deleteSubmission = async (dmChannel, dClient, submission) => {
 const isNum = (string) => {
   let isNumFunc = /^\d+$/.test(string);
   return isNumFunc;
+};
+
+const getUser = async (id_str) => {
+  const id = parseInt(id_str);
+
+  const user = await prisma.users
+    .findUnique({
+      where: { id: id },
+    })
+    .catch((e) => {
+      console.error(e);
+    });
+
+  return user;
 };
 
 module.exports = {

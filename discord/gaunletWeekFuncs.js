@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const GauntletWeek = require("./Models/GauntletWeeks");
+const { prisma } = require("./util/prisma");
 
 const addGauntletStart = async (dmChannel) => {
   const questionEmbed = new Discord.MessageEmbed()
@@ -19,21 +19,21 @@ const addGauntletStart = async (dmChannel) => {
   gauntletStartCollector.on("collect", async (reply) => {
     console.log("isnum: " + isNum(reply.content));
     if (isNum(reply.content)) {
-      // Check to see if week already exits
-      let exists = await GauntletWeek.exists({
-        week: parseInt(reply.content),
+      let exists = await prisma.gauntlet_weeks.findUnique({
+        where: { week: parseInt(reply.content) },
       });
-      console.log("exists: " + exists);
+
+      console.log("exists: ", exists);
 
       if (exists) {
         gauntletStartCollector.stop();
         const existsEmbed = new Discord.MessageEmbed()
           .setColor("db48cf")
           .setTitle(`Week already exists`).setDescription(`
-                    A gauntlet has already been set for that week.
-                    Did you want to edit it?
-                    reply with yes or no
-                    `);
+                      A gauntlet has already been set for that week.
+                      Did you want to edit it?
+                      reply with yes or no
+                      `);
         dmChannel.send(existsEmbed);
         const filter = (m) => m.author.id === dmChannel.recipient.id;
         const exsitsReplyCollector = new Discord.MessageCollector(
@@ -77,12 +77,10 @@ const addGauntletStart = async (dmChannel) => {
 };
 
 const addGauntlet = async (dmChannel, week) => {
-  let newGauntletWeek = new GauntletWeek({
-    week: week,
-    editing: true,
-    accepting_submissions: true,
+  let newGauntletWeek = await prisma.gauntlet_weeks.create({
+    data: { week: week },
   });
-  newGauntletWeek.save();
+  console.log("new Week: ", newGauntletWeek);
   const titleEmbed = new Discord.MessageEmbed()
     .setColor("db48cf")
     .setTitle(`Gauntlet Theme`).setDescription(`
@@ -95,12 +93,11 @@ const addGauntlet = async (dmChannel, week) => {
   });
 
   themeCollector.on("collect", async (themeReply) => {
-    await GauntletWeek.updateOne(
-      { week: week },
-      {
-        theme: themeReply.content,
-      }
-    );
+    let addThemeToWeek = await prisma.gauntlet_weeks.update({
+      where: { week: week },
+      data: { theme: themeReply.content },
+    });
+    // console.log(addThemeToWeek);
   });
 
   themeCollector.on("end", async (collected) => {
@@ -116,17 +113,18 @@ const addGauntlet = async (dmChannel, week) => {
     });
 
     descCollector.on("collect", async (descReply) => {
-      await GauntletWeek.updateOne(
-        { week: week },
-        {
-          description: descReply.content,
-          editing: false,
-        }
-      );
+      let addDescToWeek = await prisma.gauntlet_weeks.update({
+        where: { week: week },
+        data: { description: descReply.content },
+      });
+      // console.log(addDescToWeek);
     });
 
     descCollector.on("end", async (collected) => {
-      let createdGauntlet = await GauntletWeek.findOne({ week: week });
+      let createdGauntlet = await prisma.gauntlet_weeks.findUnique({
+        where: { week: week },
+      });
+      // console.log("Created Week: ", createdGauntlet);
       const newGauntletEmbed = new Discord.MessageEmbed()
         .setColor("#2cff14")
         .setTitle(`New Gauntlet Week Created`).setDescription(`
@@ -151,7 +149,13 @@ const editGauntletStart = async (dmChannel) => {
 
   editStartCollector.on("collect", async (editStartReply) => {
     if (isNum(editStartReply.content)) {
-      let exists = GauntletWeek.exists({ week: parseInt(editStartReply) });
+      let exists = await prisma.gauntlet_weeks
+        .findFirst({
+          where: { week: parseInt(editStartReply) },
+        })
+        .catch((e) => {
+          console.error(e);
+        });
       if (exists) {
         editGauntlet(dmChannel, parseInt(editStartReply));
         editStartCollector.stop();
@@ -234,12 +238,16 @@ const setGauntletTheme = async (dmChannel, week) => {
   });
 
   themeCollector.on("collect", async (themeReply) => {
-    await GauntletWeek.updateOne(
-      { week: week },
-      {
-        theme: themeReply.content,
-      }
-    );
+    let setGauntletTheme = await prisma.gauntlet_weeks
+      .update({
+        where: { week: week },
+        data: {
+          theme: themeReply.content,
+        },
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   });
 
   themeCollector.on("end", (collected) => {
@@ -263,12 +271,13 @@ const setGauntletDescription = async (dmChannel, week) => {
   });
 
   descCollector.on("collect", async (descReply) => {
-    await GauntletWeek.updateOne(
-      { week: week },
-      {
+    let setGauntletDesc = await prisma.gauntlet_weeks.update({
+      where: { week: week },
+      data: {
         description: descReply.content,
-      }
-    );
+      },
+    });
+    console.log("Desc updated");
   });
 
   descCollector.on("end", (collected) => {
@@ -292,10 +301,14 @@ const setActiveWeek = async (dmChannel) => {
   activeCollector.on("collect", async (activeReply) => {
     if (isNum(activeReply)) {
       let weekNum = parseInt(activeReply.content);
-      let weekExists = await GauntletWeek.exists({ week: weekNum });
+      let weekExists = await prisma.gauntlet_weeks.findUnique({
+        where: { week: weekNum },
+      });
 
       if (weekExists) {
-        let currentActive = await GauntletWeek.find({ active: true });
+        let currentActive = await prisma.gauntlet_weeks.findFirst({
+          where: { active: true },
+        });
 
         if (currentActive.week === weekNum) {
           activeReply
@@ -306,18 +319,15 @@ const setActiveWeek = async (dmChannel) => {
               msg.delete({ timeout: 5000 });
             });
         } else {
-          await GauntletWeek.updateOne(
-            { active: true },
-            {
-              active: false,
-            }
-          );
-          await GauntletWeek.updateOne(
-            { week: weekNum },
-            {
-              active: true,
-            }
-          );
+          await prisma.gauntlet_weeks.update({
+            where: { week: currentActive.week },
+            data: { active: false },
+          });
+
+          await prisma.gauntlet_weeks.update({
+            where: { week: weekNum },
+            data: { active: true },
+          });
 
           const updatedEmbed = new Discord.MessageEmbed()
             .setColor("#2cff14")
@@ -365,14 +375,14 @@ const setSubmissionStatus = async (dmChannel) => {
 
   statusCollector.on("collect", async (reply) => {
     if (reply.content === "open") {
-      await GauntletWeek.updateOne(
-        { active: true },
-        {
-          accepting_submissions: true,
-        }
-      ).catch((err) => {
-        console.error(err);
-      });
+      await prisma.gauntlet_weeks
+        .updateMany({
+          where: { active: true },
+          data: { accepting_submissions: true },
+        })
+        .catch((err) => {
+          console.error(err);
+        });
       const updatedEmbed = new Discord.MessageEmbed()
         .setColor("#2cff14")
         .setTitle(`Submission Status Set`)
@@ -380,14 +390,14 @@ const setSubmissionStatus = async (dmChannel) => {
       dmChannel.send(updatedEmbed);
       statusCollector.stop();
     } else if (reply.content === "closed") {
-      await GauntletWeek.updateOne(
-        { active: true },
-        {
-          accepting_submissions: false,
-        }
-      ).catch((err) => {
-        console.error(err);
-      });
+      await prisma.gauntlet_weeks
+        .updateMany({
+          where: { active: true },
+          data: { accepting_submissions: false },
+        })
+        .catch((err) => {
+          console.error(err);
+        });
       const updatedEmbed = new Discord.MessageEmbed()
         .setColor("#2cff14")
         .setTitle(`Submission Status Set`)

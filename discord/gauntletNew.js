@@ -7,6 +7,7 @@ const fs = require("fs");
 const allowedAdmins = ["opti21"];
 const submissionFuncs = require("./submissionFuncs");
 const GauntletWeeks = require("./Models/GauntletWeeks");
+const { prisma } = require("./util/prisma");
 
 mongoose.connect(
   `mongodb+srv://gauntlet:${process.env.MONGO_PASS}@cluster0.9bvpn.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`,
@@ -19,8 +20,6 @@ db.once("open", function () {
   console.log("Mongoose connected");
 });
 
-const Submission = require("./Models/Submissions");
-const GauntletWeek = require("./Models/GauntletWeeks");
 const {
   editGauntletStart,
   addGauntletStart,
@@ -41,8 +40,37 @@ dClient.on("message", async (message) => {
   const command = args.shift().toLowerCase();
 
   if (command === "gauntlet" || command === "g") {
-    let userSubmissions = await Submission.find({
-      user: message.author.id,
+    console.log(parseInt(message.author.id));
+
+    const userExists = await prisma.users.findFirst({
+      where: { id: parseInt(message.author.id) },
+    });
+
+    if (!userExists) {
+      await prisma.users
+        .create({
+          data: {
+            id: parseInt(message.author.id),
+            user_pic: message.author.avatarURL({
+              format: "png",
+              dynamic: true,
+            }),
+            username: message.author.username,
+          },
+        })
+        .then((response) => {
+          console.log("User Created");
+          console.log(response);
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+    }
+
+    console.log(userExists);
+
+    let userSubmissions = await prisma.submissions.findMany({
+      where: { user: parseInt(message.author.id) },
     });
     console.log(userSubmissions);
 
@@ -65,7 +93,9 @@ dClient.on("message", async (message) => {
 
         responseCollector.on("collect", async (responseAnswer) => {
           if (responseAnswer.content.toLowerCase() === "yes") {
-            let activeWeek = await GauntletWeeks.findOne({ active: true });
+            const activeWeek = await prisma.gauntlet_weeks.findFirst({
+              where: { active: true },
+            });
             if (activeWeek.accepting_submissions) {
               submissionFuncs.newSubmissionStart(dmChannel, dClient);
             } else {
