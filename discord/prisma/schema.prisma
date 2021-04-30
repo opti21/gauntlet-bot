@@ -15,10 +15,11 @@ model gauntlet_weeks {
   description           String?       @db.VarChar
   editing               Boolean?
   submissions           submissions[]
+  createdAt                                  DateTime       @default(now())
+  updatedAt                                  DateTime       @updatedAt
 }
 
 model submissions {
-  editing                                    Boolean?
   description                                String?        @db.VarChar
   submitted                                  Boolean        @default(false)
   reviewed                                   Boolean        @default(false)
@@ -30,6 +31,8 @@ model submissions {
   attachments                                String[]       @db.VarChar
   user                                       BigInt?
   gauntlet_weeks                             gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])
+  createdAt                                  DateTime       @default(now())
+  updatedAt                                  DateTime       @updatedAt
   users_submissions_userTousers              users?         @relation("submissions_userTousers", fields: [user], references: [id])
   users_submissionsTousers_currently_editing users[]        @relation("submissionsTousers_currently_editing")
 }
@@ -40,6 +43,8 @@ model users {
   username                                         String?       @db.VarChar
   twitch_username                                  String?       @db.VarChar
   currently_editing                                BigInt?
+  createdAt                                        DateTime       @default(now())
+  updatedAt                                        DateTime       @updatedAt
   submissions_submissionsTousers_currently_editing submissions?  @relation("submissionsTousers_currently_editing", fields: [currently_editing], references: [id])
   submissions_submissions_userTousers              submissions[] @relation("submissions_userTousers")
 }

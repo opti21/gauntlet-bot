@@ -113,10 +113,14 @@ const addGauntlet = async (dmChannel, week) => {
     });
 
     descCollector.on("collect", async (descReply) => {
-      let addDescToWeek = await prisma.gauntlet_weeks.update({
-        where: { week: week },
-        data: { description: descReply.content },
-      });
+      let addDescToWeek = await prisma.gauntlet_weeks
+        .update({
+          where: { week: week },
+          data: { description: descReply.content },
+        })
+        .catch((e) => {
+          console.error(e);
+        });
       // console.log(addDescToWeek);
     });
 
