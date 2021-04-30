@@ -35,7 +35,6 @@ const newSubmissionStart = async (dmChannel, dClient) => {
       const newSubmission = await prisma.submissions
         .create({
           data: {
-            editing: true,
             user: parseInt(dmChannel.recipient.id),
             gauntlet_week: gauntletInfo.week,
             description: m.content,
