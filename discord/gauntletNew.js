@@ -43,14 +43,14 @@ dClient.on("message", async (message) => {
     console.log(parseInt(message.author.id));
 
     const userExists = await prisma.users.findFirst({
-      where: { id: parseInt(message.author.id) },
+      where: { id: message.author.id },
     });
 
     if (!userExists) {
       await prisma.users
         .create({
           data: {
-            id: parseInt(message.author.id),
+            id: message.author.id,
             user_pic: message.author.avatarURL({
               format: "png",
               dynamic: true,
@@ -65,12 +65,22 @@ dClient.on("message", async (message) => {
         .catch((e) => {
           console.error(e);
         });
+    } else {
+      await prisma.users.update({
+        where: { id: userExists.id },
+        data: {
+          user_pic: message.author.avatarURL({
+            format: "png",
+            dynamic: true,
+          }),
+        },
+      });
     }
 
     console.log(userExists);
 
     let userSubmissions = await prisma.submissions.findMany({
-      where: { user: parseInt(message.author.id) },
+      where: { user: message.author.id },
     });
     console.log(userSubmissions);
 

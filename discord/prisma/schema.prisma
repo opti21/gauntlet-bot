@@ -15,36 +15,34 @@ model gauntlet_weeks {
   description           String?       @db.VarChar
   editing               Boolean?
   submissions           submissions[]
-  createdAt                                  DateTime       @default(now())
-  updatedAt                                  DateTime       @updatedAt
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 }
 
 model submissions {
-  description                                String?        @db.VarChar
-  submitted                                  Boolean        @default(false)
-  reviewed                                   Boolean        @default(false)
-  vod_link                                   String?        @db.VarChar
-  discord_message                            String?        @db.VarChar
-  react_discord_message                      String?        @db.VarChar
-  id                                         BigInt         @id @default(autoincrement())
-  gauntlet_week                              Int
-  attachments                                String[]       @db.VarChar
-  user                                       BigInt?
-  gauntlet_weeks                             gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])
-  createdAt                                  DateTime       @default(now())
-  updatedAt                                  DateTime       @updatedAt
-  users_submissions_userTousers              users?         @relation("submissions_userTousers", fields: [user], references: [id])
-  users_submissionsTousers_currently_editing users[]        @relation("submissionsTousers_currently_editing")
+  description           String?        @db.VarChar
+  submitted             Boolean        @default(false)
+  reviewed              Boolean        @default(false)
+  vod_link              String?        @db.VarChar
+  discord_message       String?        @db.VarChar
+  react_discord_message String?        @db.VarChar
+  id                    Int            @id @default(autoincrement())
+  gauntlet_week         Int
+  attachments           String[]       @db.VarChar
+  user                  String
+  gauntlet_weeks        gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  user_profile          users?         @relation(fields: [user], references: [id])
 }
 
 model users {
-  id                                               BigInt        @id
-  user_pic                                         String?       @db.VarChar
-  username                                         String?       @db.VarChar
-  twitch_username                                  String?       @db.VarChar
-  currently_editing                                BigInt?
-  createdAt                                        DateTime       @default(now())
-  updatedAt                                        DateTime       @updatedAt
-  submissions_submissionsTousers_currently_editing submissions?  @relation("submissionsTousers_currently_editing", fields: [currently_editing], references: [id])
-  submissions_submissions_userTousers              submissions[] @relation("submissions_userTousers")
+  id                String           @id
+  user_pic          String?       @db.VarChar
+  username          String?       @db.VarChar
+  twitch_username   String?       @db.VarChar
+  currently_editing Int?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  submissions       submissions[]
 }

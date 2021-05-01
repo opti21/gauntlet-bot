@@ -35,7 +35,7 @@ const newSubmissionStart = async (dmChannel, dClient) => {
       const newSubmission = await prisma.submissions
         .create({
           data: {
-            user: parseInt(dmChannel.recipient.id),
+            user: dmChannel.recipient.id,
             gauntlet_week: gauntletInfo.week,
             description: m.content,
           },
@@ -46,7 +46,7 @@ const newSubmissionStart = async (dmChannel, dClient) => {
 
       await prisma.users
         .update({
-          where: { id: parseInt(dmChannel.recipient.id) },
+          where: { id: dmChannel.recipient.id },
           data: {
             currently_editing: newSubmission.id,
           },
@@ -265,7 +265,7 @@ const returningUserMenu = async (dmChannel, dClient) => {
       });
       const submissionExists = await prisma.submissions.findFirst({
         where: {
-          user: parseInt(dmChannel.recipient.id),
+          user: dmChannel.recipient.id,
           gauntlet_week: activeWeek.week,
         },
       });
@@ -347,7 +347,7 @@ const returningUserMenu = async (dmChannel, dClient) => {
 const editSubmissionStartMenu = async (dmChannel, dClient) => {
   const submissions = await prisma.submissions
     .findMany({
-      where: { user: parseInt(dmChannel.recipient.id) },
+      where: { user: dmChannel.recipient.id },
     })
     .catch((e) => {
       console.error(e);
@@ -390,7 +390,7 @@ const editSubmissionStartMenu = async (dmChannel, dClient) => {
       // Reply is a number
       const submissionExists = await prisma.submissions.findFirst({
         where: {
-          user: parseInt(dmChannel.recipient.id),
+          user: dmChannel.recipient.id,
           gauntlet_week: parseInt(reply.content),
         },
       });
@@ -432,7 +432,7 @@ const editSubmissionStartMenu = async (dmChannel, dClient) => {
 const editSubmission = async (dmChannel, week, dClient) => {
   const submission = await prisma.submissions.findFirst({
     where: {
-      user: parseInt(dmChannel.recipient.id),
+      user: dmChannel.recipient.id,
       gauntlet_week: week,
     },
   });
@@ -737,7 +737,7 @@ const editFiles = async (dmChannel, submission, dClient) => {
 const deleteSubmissionMenu = async (dmChannel, dClient) => {
   const submissions = await prisma.submissions.findMany({
     where: {
-      user: parseInt(dmChannel.recipient.id),
+      user: dmChannel.recipient.id,
     },
   });
 
@@ -767,7 +767,7 @@ const deleteSubmissionMenu = async (dmChannel, dClient) => {
     if (isNum(reply.content)) {
       const submission = await prisma.submissions.findFirst({
         where: {
-          user: parseInt(dmChannel.recipient.id),
+          user: dmChannel.recipient.id,
           gauntlet_week: parseInt(reply.content),
         },
       });
@@ -887,9 +887,7 @@ const isNum = (string) => {
   return isNumFunc;
 };
 
-const getUser = async (id_str) => {
-  const id = parseInt(id_str);
-
+const getUser = async (id) => {
   const user = await prisma.users
     .findUnique({
       where: { id: id },

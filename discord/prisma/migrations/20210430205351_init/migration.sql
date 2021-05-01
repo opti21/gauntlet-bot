@@ -14,17 +14,16 @@ CREATE TABLE "gauntlet_weeks" (
 
 -- CreateTable
 CREATE TABLE "submissions" (
-    "editing" BOOLEAN,
     "description" VARCHAR,
     "submitted" BOOLEAN NOT NULL DEFAULT false,
     "reviewed" BOOLEAN NOT NULL DEFAULT false,
     "vod_link" VARCHAR,
     "discord_message" VARCHAR,
     "react_discord_message" VARCHAR,
-    "id" BIGSERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "gauntlet_week" INTEGER NOT NULL,
     "attachments" VARCHAR[],
-    "user" BIGINT,
+    "user" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -33,11 +32,11 @@ CREATE TABLE "submissions" (
 
 -- CreateTable
 CREATE TABLE "users" (
-    "id" BIGINT NOT NULL,
+    "id" INTEGER NOT NULL,
     "user_pic" VARCHAR,
     "username" VARCHAR,
     "twitch_username" VARCHAR,
-    "currently_editing" BIGINT,
+    "currently_editing" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -48,7 +47,4 @@ CREATE TABLE "users" (
 ALTER TABLE "submissions" ADD FOREIGN KEY ("gauntlet_week") REFERENCES "gauntlet_weeks"("week") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "submissions" ADD FOREIGN KEY ("user") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "users" ADD FOREIGN KEY ("currently_editing") REFERENCES "submissions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "submissions" ADD FOREIGN KEY ("user") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
