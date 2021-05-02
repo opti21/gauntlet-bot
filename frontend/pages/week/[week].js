@@ -18,14 +18,16 @@ export default function Current({ data_str }) {
   return (
     <>
       <Head>
-        <title>Gauntlet Bot - Current Week</title>
+        <title>
+          Week {data.week_info.week} - {data.week_info.theme}
+        </title>
       </Head>
       <Layout className="layout">
-        <Gheader activePage={"1"} />
+        <Gheader />
         <Content style={{ padding: "0 50px" }}>
-          <Title style={{ marginTop: "10px" }}>Current Week</Title>
-          <h2>Week: {data.week_info.week} </h2>
-          <h2>Theme: {data.week_info.theme}</h2>
+          <Title style={{ marginTop: "10px" }}>
+            Week {data.week_info.week} - {data.week_info.theme}
+          </Title>
           <Row style={{ marginBottom: "10px" }}>
             <Col>
               <Statistic
