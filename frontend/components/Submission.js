@@ -10,12 +10,12 @@ import {
 } from "antd";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
+import { PrismaClient } from "@prisma/client";
 
 const { Title } = Typography;
 
-export default function Submission(props) {
-  const { submissionData } = props;
-  console.log(submissionData);
+export default function Submission({ data }) {
+  console.log(data);
   return (
     <>
       <Row>
@@ -23,24 +23,24 @@ export default function Submission(props) {
           <Affix offsetTop={10}>
             <Card title="Submission By:" style={{ margin: "0px 10px 0px 0px" }}>
               <div style={{ textAlign: "center" }}>
-                <Avatar size={64} src={submissionData.user.user_pic} />
-                <Title level={4}>{submissionData.user.username}</Title> </div>
+                <Avatar size={64} src={data.submission.user_profile.user_pic} />
+                <Title level={4}>{data.submission.user_profile.username}</Title>
+              </div>
             </Card>
-            {submissionData.images.length > 0 ? (
+            {data.images.length > 0 ? (
               <Card title="Images:" style={{ margin: "10px 10px 0px 0px" }}>
                 <Image.PreviewGroup width>
-                  {submissionData.images.map((image) => {
-                    console.log("is image")
+                  {data.images.map((image, index) => {
+                    console.log("is image");
                     return (
-                      <div style={{ margin: "5px", float: "left" }}>
+                      <div key={index} style={{ margin: "5px", float: "left" }}>
                         <Image
                           width={75}
                           src="/preview.png"
                           preview={{
-                            src: `${image.url}`
+                            src: `${image.url}`,
                           }}
                           alt={image.filename}
-
                         />
                       </div>
                     );
@@ -50,21 +50,26 @@ export default function Submission(props) {
             ) : (
               <></>
             )}
-            {submissionData.files.length > 0 ? (
+            {data.files.length > 0 ? (
               <Card title="Files:" style={{ margin: "10px 10px 0px 0px" }}>
                 <ul>
-                  {submissionData.files.map(file => {
-                    return <li><a href={file.url} key={file.key}>{file.filename}</a></li>
+                  {data.files.map((file, index) => {
+                    return (
+                      <li key={index}>
+                        <a href={file.url} key={file.key}>
+                          {file.filename}
+                        </a>
+                      </li>
+                    );
                   })}
-
                 </ul>
               </Card>
             ) : (
               <></>
             )}
-            {submissionData.vod_link.length > 0 ? (
+            {data.submission.vod_link ? (
               <Card title="Vod Link:" style={{ margin: "10px 10px 0px 0px" }}>
-                <a href={submissionData.vod_link}>Watch Review</a>
+                <a href={data.submission.vod_link}>Watch Review</a>
               </Card>
             ) : (
               <></>
@@ -76,7 +81,7 @@ export default function Submission(props) {
             <div style={{ whiteSpace: "pre-line" }}>
               <ReactMarkdown
                 plugins={[gfm]}
-                children={submissionData.description}
+                children={data.submission.description}
               />
             </div>
           </Card>

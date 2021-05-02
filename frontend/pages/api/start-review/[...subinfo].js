@@ -5,49 +5,63 @@ import utc from "dayjs/plugin/utc";
 import duration from "dayjs/plugin/duration";
 dayjs.extend(utc);
 dayjs.extend(duration);
-import { connectToDatabase } from "../../../util/mongodb_backend";
 import { getSession } from "next-auth/client";
+import prisma from "../../../util/prisma";
 
 export default async (req, res) => {
-  const { db } = await connectToDatabase();
   const session = await getSession({ req });
   // console.log(session)
   const { subinfo } = req.query;
   console.log(subinfo);
 
   if (session) {
-    const submission = await db
-      .collection("submissions")
-      .find({
-        user: parseInt(subinfo[0]),
-        week: parseInt(subinfo[1]),
+    const submission = await prisma.submissions
+      .findFirst({
+        where: {
+          user: subinfo[0],
+          gauntlet_week: parseInt(subinfo[1]),
+        },
       })
-      .toArray();
+      .catch((e) => {
+        console.error(e);
+      });
 
-    if (submission.length > 0) {
-      if (submission[0].reviewed === "true") {
+    if (submission) {
+      if (submission.reviewed) {
         res.status(400).json({
           error: "Review already started",
         });
       } else {
-        const user = await db
-          .collection("admins")
-          .find({ user: session.user.name })
-          .project({ _id: 0 })
-          .toArray();
+        const isAdmin = await prisma.admins
+          .findFirst({
+            where: {
+              twitch_username: session.user.name,
+            },
+          })
+          .catch((e) => {
+            console.error(e);
+            res.status(500).json({
+              error: e,
+            });
+          });
 
-        let isAdmin;
-        if (user.length > 0) {
-          isAdmin = true;
-        } else {
-          isAdmin = false;
-        }
         if (isAdmin) {
-          const token_db = await db.collection("twitch_creds").find().toArray();
+          const token_db = await prisma.twitch_creds
+            .findUnique({
+              where: {
+                id: 1,
+              },
+            })
+            .catch((e) => {
+              console.error(e);
+              res.status(500).json({
+                error: e,
+              });
+            });
 
           let TWITCH_TOKEN;
 
-          if (token_db.length === 0) {
+          if (!token_db) {
             let tokenResponse = await axios.post(
               `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT}&client_secret=${process.env.TWITCH_SECRET}&grant_type=client_credentials`
             );
@@ -55,18 +69,23 @@ export default async (req, res) => {
 
             const tokenDoc = {
               access_token: tokenData.access_token,
-              expires: tokenData.expires_in,
+              expires_in: tokenData.expires_in,
             };
 
-            let dbResponse = await db
-              .collection("twitch_creds")
-              .insertOne(tokenDoc);
-
-            console.log(dbResponse.insertedCount);
+            await prisma.twitch_creds
+              .create({
+                data: tokenDoc,
+              })
+              .then((response) => {
+                console.log("Token Created");
+              })
+              .catch((e) => {
+                console.error(e);
+              });
 
             TWITCH_TOKEN = tokenData.access_token;
           } else {
-            TWITCH_TOKEN = token_db[0].access_token;
+            TWITCH_TOKEN = token_db.access_token;
           }
 
           // 441355780
@@ -108,62 +127,29 @@ export default async (req, res) => {
             console.error(vidError);
           }
 
-          const updated = await db.collection("submissions").findOneAndUpdate(
-            {
-              user: parseInt(subinfo[0]),
-              week: parseInt(subinfo[1]),
-            },
-            {
-              $set: {
-                reviewed: "true",
+          // Update submission with vod link
+
+          await prisma.submissions
+            .update({
+              where: {
+                id: submission.id,
+              },
+              data: {
+                reviewed: true,
                 vod_link: vod_link,
               },
-            },
-            {
-              returnOriginal: false,
-            },
-            async (err, document) => {
-              if (err) {
-                console.error(err);
-                res.status(501).json({
-                  error: err,
-                });
-              }
-              // update discord message
-              let doc = document.value;
-              let attachments = JSON.parse(doc.attachments);
-
-              let fileStr = "";
-
-              if (attachments.length > 0) {
-                attachments.forEach((file) => {
-                  fileStr += `${file}\n`;
-                });
-              }
-
-              const response = await fetch(process.env.DISCORD_WEBHOOK, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  embeds: [
-                    {
-                      type: "rich",
-                      color: 14371023,
-                      title: `Billy's review of ${doc.username}'s week ${doc.week} submission`,
-                      description: doc.vod_link,
-                    },
-                  ],
-                }),
+            })
+            .then((update_res) => {
+              res.status(200).json({
+                review_started: true,
               });
-
-              console.log(response);
-            }
-          );
-          res.status(200).json({
-            review_started: true,
-          });
+            })
+            .catch((e) => {
+              console.error(e);
+              res.status(501).json({
+                error: err,
+              });
+            });
         } else {
           res.status(401).json({
             error: "Unathorized",

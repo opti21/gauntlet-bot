@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@prisma/client": "^2.21.2",
     "antd": "^4.13.1",
     "apollo-server-micro": "^2.21.1",
     "axios": "^0.21.1",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "autoprefixer": "^10.2.5",
     "postcss": "^8.2.8",
+    "prisma": "^2.21.2",
     "tailwindcss": "^2.0.3"
   }
 }

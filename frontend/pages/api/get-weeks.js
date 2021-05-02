@@ -1,13 +1,10 @@
 require("dotenv").config();
 import { connectToDatabase } from "../../util/mongodb_backend";
+import { PrismaClient } from "@prisma/client";
 
 export default async (req, res) => {
-  const { db } = await connectToDatabase();
-  const weeks = await db
-    .collection("gauntlet weeks")
-    .find({}, { _id: 0 })
-    .sort({ week: -1 })
-    .toArray();
-
+  const prisma = new PrismaClient();
+  const weeks = await prisma.gauntlet_weeks.findMany({});
+  console.log(weeks);
   res.status(200).json(weeks);
 };

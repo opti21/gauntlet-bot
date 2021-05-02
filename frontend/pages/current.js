@@ -1,15 +1,19 @@
-import { useSession } from "next-auth/client";
-import { Layout, Typography } from "antd";
+import { Layout, Typography, Statistic, Row, Col, Progress } from "antd";
 const { Content } = Layout;
 const { Title } = Typography;
 import Gfooter from "../components/Gfooter";
-import Link from "next/link";
 import Head from "next/head";
 import Gheader from "../components/Gheader";
 import CurrentWeekTable from "../components/CurrentTable";
+import prisma from "../util/prisma";
 
-export default function Current(props) {
-  const [session, loading] = useSession();
+export default function Current({ data_str }) {
+  const data = JSON.parse(data_str);
+
+  const notReviewed = data.not_reviewed;
+  const reviewed = data.reviewed;
+
+  // console.log(notReviewed);
 
   return (
     <>
@@ -20,7 +24,48 @@ export default function Current(props) {
         <Gheader activePage={"1"} />
         <Content style={{ padding: "0 50px" }}>
           <Title style={{ marginTop: "10px" }}>Current Week</Title>
-          <CurrentWeekTable data={{}} />
+          <h2>Week: {data.week_info.week} </h2>
+          <h2>Theme: {data.week_info.theme}</h2>
+          <Row style={{ marginBottom: "10px" }}>
+            <Col>
+              <Statistic
+                title="# of Submissons"
+                value={data.total_num}
+                style={{
+                  padding: "30px",
+                  margin: "0px 10px 10px 0px",
+                  background: "#212121",
+                }}
+              />
+            </Col>
+            <Col>
+              <div
+                style={{
+                  background: "#212121",
+                  width: "200px",
+                  height: "124px",
+                }}
+              >
+                <Statistic
+                  title="Reviewed:"
+                  value={data.reviewed_num}
+                  suffix={`/ ${data.total_num}`}
+                  style={{ padding: "30px 10px 0px 25px", float: "left" }}
+                />
+                <Progress
+                  type="circle"
+                  percent={data.reviewed_percentage}
+                  width={70}
+                  style={{ padding: "30px 0px 0px 10px", float: "left" }}
+                />
+              </div>
+            </Col>
+          </Row>
+          <h2>Not Reviewed</h2>
+          <CurrentWeekTable data={notReviewed} />
+          <br />
+          <h2>Reviewed</h2>
+          <CurrentWeekTable data={reviewed} />
         </Content>
         <Gfooter />
       </Layout>
@@ -29,17 +74,54 @@ export default function Current(props) {
 }
 
 export const getServerSideProps = async (ctx) => {
-  console.log(ctx);
-  const weeks = await fetch(process.env.NEXTAUTH_URL + "/api/get-weeks")
-    .then((response) => response.json())
-    .then((data) => {
-      return data;
-    });
-  console.log(weeks);
+  const activeWeek = await prisma.gauntlet_weeks.findFirst({
+    where: { active: true },
+  });
+  console.log(activeWeek);
+  const notReviewed = await prisma.submissions.findMany({
+    where: { gauntlet_week: activeWeek.week, reviewed: false },
+    include: {
+      user_profile: true,
+    },
+    orderBy: [
+      {
+        createdAt: "asc",
+      },
+    ],
+  });
+
+  const reviewed = await prisma.submissions.findMany({
+    where: { gauntlet_week: activeWeek.week, reviewed: true },
+    include: {
+      user_profile: true,
+    },
+    orderBy: [
+      {
+        createdAt: "asc",
+      },
+    ],
+  });
+
+  const total = notReviewed.length + reviewed.length;
+  const reviewed_num = reviewed.length;
+  const reviewedPercentage = Math.floor((reviewed_num / total) * 100);
+  console.log(total);
+
+  const data_str = JSON.stringify({
+    week_info: {
+      week: activeWeek.week,
+      theme: activeWeek.theme,
+    },
+    not_reviewed: notReviewed,
+    reviewed: reviewed,
+    total_num: total,
+    reviewed_num: reviewed_num,
+    reviewed_percentage: reviewedPercentage,
+  });
 
   return {
     props: {
-      weeks: weeks,
+      data_str: data_str,
     },
   };
 };
