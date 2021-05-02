@@ -138,8 +138,29 @@ export default async (req, res) => {
                 reviewed: true,
                 vod_link: vod_link,
               },
+              include: {
+                user_profile: true,
+              },
             })
-            .then((update_res) => {
+            .then(async (doc) => {
+              console.log(doc);
+              await fetch(process.env.DISCORD_WEBHOOK, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  embeds: [
+                    {
+                      type: "rich",
+                      color: 14371023,
+                      title: `Billy's review of ${doc.user_profile.username}'s week ${doc.gauntlet_week} submission`,
+                      description: doc.vod_link,
+                    },
+                  ],
+                }),
+              });
+
               res.status(200).json({
                 review_started: true,
               });

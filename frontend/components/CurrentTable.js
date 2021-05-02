@@ -1,4 +1,4 @@
-import { Alert, Avatar, Skeleton, Table, Tag } from "antd";
+import { Avatar, Skeleton, Table, Tag } from "antd";
 import Link from "next/link";
 
 export default function CurrentWeekTable({ data }) {
