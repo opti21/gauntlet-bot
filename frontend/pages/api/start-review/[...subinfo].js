@@ -24,6 +24,9 @@ export default async (req, res) => {
       })
       .catch((e) => {
         console.error(e);
+        res.status(500).json({
+          error: e,
+        });
       });
 
     if (submission) {
@@ -81,6 +84,9 @@ export default async (req, res) => {
               })
               .catch((e) => {
                 console.error(e);
+                res.status(500).json({
+                  error: e,
+                });
               });
 
             TWITCH_TOKEN = tokenData.access_token;
@@ -125,6 +131,9 @@ export default async (req, res) => {
           } else {
             const vidError = await vidFetch.json();
             console.error(vidError);
+            res.status(vidError).json({
+              error: e,
+            });
           }
 
           // Update submission with vod link
