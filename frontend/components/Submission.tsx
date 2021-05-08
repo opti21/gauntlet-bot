@@ -29,7 +29,7 @@ export default function Submission({ data }) {
             </Card>
             {data.images.length > 0 ? (
               <Card title="Images:" style={{ margin: "10px 10px 0px 0px" }}>
-                <Image.PreviewGroup width>
+                <Image.PreviewGroup>
                   {data.images.map((image, index) => {
                     console.log("is image");
                     return (
