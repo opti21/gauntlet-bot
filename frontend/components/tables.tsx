@@ -3,8 +3,7 @@ import Link from "next/link";
 import useSWR from "swr";
 
 const PreviousWeeksTable = () => {
-  const fetcher = (url) => fetch(url).then((r) => r.json());
-  const { data: weeks, error } = useSWR("/api/get-weeks", fetcher);
+  const { data: weeks, error } = useSWR("/api/get-weeks");
 
   if (error) return <div>Error Loading Table</div>;
   if (!weeks) return <div>Loading Table...</div>;

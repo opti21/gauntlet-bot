@@ -6,20 +6,20 @@ import duration from "dayjs/plugin/duration";
 dayjs.extend(utc);
 dayjs.extend(duration);
 import { getSession } from "next-auth/client";
-import prisma from "../../../util/prisma";
+import prisma from "../../util/prisma";
+import { NextApiResponse } from "next";
 
-export default async (req, res) => {
+export default async (req, res: NextApiResponse) => {
   const session = await getSession({ req });
   // console.log(session)
-  const { subinfo } = req.query;
-  console.log(subinfo);
+  const { user, week }: { user: string; week: string } = req.query;
 
   if (session) {
     const submission = await prisma.submissions
       .findFirst({
         where: {
-          user: subinfo[0],
-          gauntlet_week: parseInt(subinfo[1]),
+          user: user,
+          gauntlet_week: parseInt(week),
         },
       })
       .catch((e) => {
@@ -49,6 +49,21 @@ export default async (req, res) => {
           });
 
         if (isAdmin) {
+          await prisma.submissions
+            .update({
+              where: {
+                id: submission.id,
+              },
+              data: {
+                reviewed: true,
+              },
+            })
+            .then((response) => {
+              res.status(200).json({
+                review_started: true,
+              });
+            });
+
           const token_db = await prisma.twitch_creds
             .findUnique({
               where: {
@@ -109,6 +124,7 @@ export default async (req, res) => {
           let vod_link;
 
           if (vidFetch.status === 200) {
+            console.log("VOD FETCH SUCCESS");
             const vidJSON = await vidFetch.json();
             const { data: videos } = vidJSON;
 
@@ -132,7 +148,7 @@ export default async (req, res) => {
             const vidError = await vidFetch.json();
             console.error(vidError);
             res.status(vidError).json({
-              error: e,
+              error: vidError,
             });
           }
 
@@ -144,7 +160,6 @@ export default async (req, res) => {
                 id: submission.id,
               },
               data: {
-                reviewed: true,
                 vod_link: vod_link,
               },
               include: {
@@ -153,7 +168,7 @@ export default async (req, res) => {
             })
             .then(async (doc) => {
               console.log(doc);
-              await fetch(process.env.DISCORD_WEBHOOK, {
+              await fetch(process.env.TEST_DISCORD_WEBHOOK, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -168,16 +183,21 @@ export default async (req, res) => {
                     },
                   ],
                 }),
-              });
-
-              res.status(200).json({
-                review_started: true,
-              });
+              })
+                .then((res) => {
+                  console.log("WEBHOOK POSTED");
+                })
+                .catch((e) => {
+                  console.error(e);
+                  res.status(501).json({
+                    error: e,
+                  });
+                });
             })
             .catch((e) => {
               console.error(e);
               res.status(501).json({
-                error: err,
+                error: e,
               });
             });
         } else {

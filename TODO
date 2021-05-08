@@ -21,6 +21,7 @@ Frontend:
 
 Discord:
   ✔ Fix editing functions @done(21-04-26 23:14)
+  ☐ See if there is a way to detect if user can't see emebeds
   ☐ Can emotes be parsed into URLs?
   ☐ Add opt-in to get pinged when review is started
   ☐ Create ping when user's submission is being reviewed
