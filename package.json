@@ -1,0 +1,19 @@
+{
+  "name": "gauntlet-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": " ",
+  "scripts": {
+    "build": "cd frontend && npm run build && npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/opti21/gauntlet-bot.git"
+  },
+  "author": "opti21",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/opti21/gauntlet-bot/issues"
+  },
+  "homepage": "https://github.com/opti21/gauntlet-bot#readme"
+}

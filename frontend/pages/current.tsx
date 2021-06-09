@@ -23,6 +23,10 @@ export default function Current({ data_str }) {
   const notReviewed = data?.not_reviewed;
   const reviewed = data?.reviewed;
 
+  const h2Style = {
+    textShadow: "2px 2px 13px #000000",
+  };
+
   // console.log(notReviewed);
 
   // return <>test</>;
@@ -32,14 +36,25 @@ export default function Current({ data_str }) {
       <Head>
         <title>Gauntlet Bot - Current Week</title>
       </Head>
-      <Layout className="layout">
+      <Layout className="layout progress-bg">
         <Gheader activePage={"1"} />
-        <Content style={{ padding: "0 50px" }}>
-          <Title style={{ marginTop: "10px" }}>Current Week</Title>
+        <Content
+          style={{
+            padding: "0 50px",
+          }}
+        >
+          <Title
+            style={{
+              marginTop: "10px",
+              textShadow: "2px 2px 13px #000000",
+            }}
+          >
+            Current Week
+          </Title>
           {data ? (
             <>
-              <h2>Week: {data.week_info.week} </h2>
-              <h2>Theme: {data.week_info.theme}</h2>
+              <h2 style={h2Style}>Week: {data.week_info.week} </h2>
+              <h2 style={h2Style}>Theme: {data.week_info.theme}</h2>
               <Row style={{ marginBottom: "10px" }}>
                 <Col>
                   <Statistic
@@ -62,23 +77,29 @@ export default function Current({ data_str }) {
                   >
                     <Statistic
                       title="Reviewed:"
-                      value={data.reviewed_num}
-                      suffix={`/ ${data.total_num}`}
-                      style={{ padding: "30px 10px 0px 25px", float: "left" }}
+                      value={data.reviewed_num || 0}
+                      suffix={`/ ${data.total_num || 0}`}
+                      style={{
+                        padding: "30px 10px 0px 25px",
+                        float: "left",
+                      }}
                     />
                     <Progress
                       type="circle"
-                      percent={data.reviewed_percentage}
+                      percent={data.reviewed_percentage || 0}
                       width={70}
-                      style={{ padding: "30px 0px 0px 10px", float: "left" }}
+                      style={{
+                        padding: "30px 0px 0px 10px",
+                        float: "left",
+                      }}
                     />
                   </div>
                 </Col>
               </Row>
-              <h2>Not Reviewed</h2>
+              <h2 style={h2Style}>Not Reviewed</h2>
               <CurrentWeekTable data={notReviewed} />
               <br />
-              <h2>Reviewed</h2>
+              <h2 style={h2Style}>Reviewed</h2>
               <CurrentWeekTable data={reviewed} />
             </>
           ) : (

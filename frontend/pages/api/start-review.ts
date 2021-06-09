@@ -121,25 +121,25 @@ export default async (req, res: NextApiResponse) => {
             }
           );
 
-          let vod_link;
+          let vod_link: String;
 
           if (vidFetch.status === 200) {
             console.log("VOD FETCH SUCCESS");
             const vidJSON = await vidFetch.json();
             const { data: videos } = vidJSON;
 
-            console.log("Now: " + dayjs().utc().format());
-            console.log("Started: " + videos[0].published_at);
-            console.log(
-              "Formatted: " + dayjs(videos[0].published_at).utc().format()
-            );
+            // console.log("Now: " + dayjs().utc().format());
+            // console.log("Started: " + videos[0].published_at);
+            // console.log(
+            //   "Formatted: " + dayjs(videos[0].published_at).utc().format()
+            // );
 
             const started_at = dayjs(videos[0].published_at).utc();
             const now = dayjs().utc();
 
             const difference = now.diff(started_at);
             const offset = dayjs.duration(difference).format("HH[h]mm[m]ss[s]");
-            console.log(offset);
+            // console.log(offset);
 
             vod_link = videos[0].url + "?t=" + offset;
 

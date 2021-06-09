@@ -213,6 +213,25 @@ dClient.on("message", async (message) => {
       });
     }
   }
+
+  if (
+    command === "getnames" &&
+    allowedAdmins.includes(message.author.username)
+  ) {
+    const activeWeek = await prisma.gauntlet_weeks.findFirst({
+      where: { active: true },
+    });
+    const submissions = await prisma.submissions.findMany({
+      where: { gauntlet_week: activeWeek.week },
+      include: { user_profile: true },
+    });
+    let userStr = "";
+
+    submissions.forEach((sub) => {
+      userStr += `${sub.user_profile.username}\n`;
+    });
+    message.reply(userStr);
+  }
 });
 
 dClient.login(process.env.DISCORD_TOKEN);

@@ -12,6 +12,8 @@ export default function CurrentWeekTable({ data }) {
     };
   });
 
+  const pagination: object = { position: ["bottomRight", "topRight"] };
+
   const columns = [
     {
       title: "User",
@@ -57,7 +59,12 @@ export default function CurrentWeekTable({ data }) {
 
   return (
     <>
-      <Table size={"small"} dataSource={tableData} columns={columns} />
+      <Table
+        size={"small"}
+        dataSource={tableData}
+        columns={columns}
+        pagination={pagination}
+      />
     </>
   );
 }

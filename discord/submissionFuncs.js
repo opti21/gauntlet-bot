@@ -112,6 +112,7 @@ const collectFiles = async (dmChannel, dClient) => {
   const fileCollector = new Discord.MessageCollector(dmChannel, filter);
 
   fileCollector.on("collect", async (fileM) => {
+    console.log(fileM);
     if (fileM.content.toLowerCase() != "done") {
       // console.log(fileM.attachments.size)
       if (fileM.attachments.size > 0) {
@@ -259,7 +260,7 @@ const returningUserMenu = async (dmChannel, dClient) => {
 
   menuStartReplyCollector.on("collect", async (menuReplyMessage) => {
     // console.log(`Collected ${m.content}`);
-    if (menuReplyMessage.content === "submit") {
+    if (menuReplyMessage.content.toLowerCase() === "submit") {
       const activeWeek = await prisma.gauntlet_weeks.findFirst({
         where: { active: true },
       });
@@ -319,13 +320,13 @@ const returningUserMenu = async (dmChannel, dClient) => {
         }
       }
       menuStartReplyCollector.stop();
-    } else if (menuReplyMessage.content === "edit") {
+    } else if (menuReplyMessage.content.toLowerCase() === "edit") {
       editSubmissionStartMenu(dmChannel, dClient);
       menuStartReplyCollector.stop();
-    } else if (menuReplyMessage.content === "delete") {
+    } else if (menuReplyMessage.content.toLowerCase() === "delete") {
       deleteSubmissionMenu(dmChannel, dClient);
       menuStartReplyCollector.stop();
-    } else if (menuReplyMessage.content === "cancel") {
+    } else if (menuReplyMessage.content.toLowerCase() === "cancel") {
       menuReplyMessage.reply(`Alrighty see ya later :)`).then((m) => {
         m.delete({ timeout: 5000 });
       });
@@ -457,13 +458,22 @@ const editSubmission = async (dmChannel, week, dClient) => {
   );
 
   editMenuReplyCollector.on("collect", (reply) => {
-    if (reply.content === "descrpition" || parseInt(reply.content) === 1) {
+    if (
+      reply.content.toLowerCase() === "descrpition" ||
+      parseInt(reply.content) === 1
+    ) {
       editDescription(dmChannel, submission, dClient);
       editMenuReplyCollector.stop();
-    } else if (reply.content === "files" || parseInt(reply.content) === 2) {
+    } else if (
+      reply.content.toLowerCase() === "files" ||
+      parseInt(reply.content) === 2
+    ) {
       editFiles(dmChannel, submission, dClient);
       editMenuReplyCollector.stop();
-    } else if (reply.content === "cancel" || parseInt(reply.content) === 3) {
+    } else if (
+      reply.content.toLowerCase() === "cancel" ||
+      parseInt(reply.content) === 3
+    ) {
       reply.reply(`Edit cancelled have a great day :)`).then((m) => {
         m.delete({ timeout: 5000 });
       });

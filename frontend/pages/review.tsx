@@ -38,7 +38,7 @@ export default function Review() {
       <Head>
         <title>Gauntlet Bot - Submission</title>
       </Head>
-      <Layout className="layout">
+      <Layout className="layout progress-bg">
         <BackTop />
         <Gheader />
         <Content style={{ padding: "30px 50px" }}>
@@ -56,8 +56,17 @@ export default function Review() {
                 <>
                   {data.isAdmin ? (
                     <>
-                      <div style={{ width: "100%", textAlign: "center" }}>
-                        <Title>
+                      <div
+                        style={{
+                          textAlign: "center",
+                        }}
+                      >
+                        <Title
+                          style={{
+                            width: "100%",
+                            textShadow: "2px 2px 13px #000000",
+                          }}
+                        >
                           {data.submission.user_profile.username}
                           's submission
                         </Title>
