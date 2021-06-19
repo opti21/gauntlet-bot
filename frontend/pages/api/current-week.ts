@@ -1,8 +1,9 @@
 require("dotenv").config();
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../util/prisma";
+import { withSentry } from "@sentry/nextjs";
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+const currentWeek = async (req: NextApiRequest, res: NextApiResponse) => {
   const activeWeek = await prisma.gauntlet_weeks.findFirst({
     where: { active: true },
   });
@@ -48,3 +49,5 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     reviewed_percentage: reviewedPercentage,
   });
 };
+
+export default withSentry(currentWeek);

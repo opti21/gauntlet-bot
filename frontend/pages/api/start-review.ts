@@ -8,8 +8,9 @@ dayjs.extend(duration);
 import { getSession } from "next-auth/client";
 import prisma from "../../util/prisma";
 import { NextApiResponse } from "next";
+import { withSentry } from "@sentry/nextjs";
 
-export default async (req, res: NextApiResponse) => {
+const startReview = async (req, res: NextApiResponse) => {
   const session = await getSession({ req });
   // console.log(session)
   const { user, week }: { user: string; week: string } = req.query;
@@ -215,3 +216,5 @@ export default async (req, res: NextApiResponse) => {
     res.status(401).json({ error: "Unathorized" });
   }
 };
+
+export default withSentry(startReview);

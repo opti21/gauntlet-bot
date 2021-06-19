@@ -1,8 +1,9 @@
 import { getSession } from "next-auth/client";
 import prisma from "../../util/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
+import { withSentry } from "@sentry/nextjs";
 
-export default async (req, res: NextApiResponse) => {
+const submission = async (req, res: NextApiResponse) => {
   const session = await getSession({ req });
   const { user, week }: { user: string; week: string } = req.query;
   console.log(req.query);
@@ -23,9 +24,10 @@ export default async (req, res: NextApiResponse) => {
   if (submission) {
     if (submission.attachments.length > 0) {
       submission.attachments.forEach((attachment, index) => {
-        const is_image = /^(?:(?<scheme>[^:\/?#]+):)?(?:\/\/(?<authority>[^\/?#]*))?(?<path>[^?#]*\/)?(?<file>[^?#]*\.(?<extension>[Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Gg][Ii][Ff]))(?:\?(?<query>[^#]*))?(?:#(?<fragment>.*))?$/gm.test(
-          attachment
-        );
+        const is_image =
+          /^(?:(?<scheme>[^:\/?#]+):)?(?:\/\/(?<authority>[^\/?#]*))?(?<path>[^?#]*\/)?(?<file>[^?#]*\.(?<extension>[Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Gg][Ii][Ff]))(?:\?(?<query>[^#]*))?(?:#(?<fragment>.*))?$/gm.test(
+            attachment
+          );
 
         const filenameRegex = /(?=\w+\.\w{3,4}$).+/gim;
         const filename = attachment.match(filenameRegex);
@@ -86,3 +88,5 @@ export default async (req, res: NextApiResponse) => {
     show_sub: showSub,
   });
 };
+
+export default withSentry(submission);

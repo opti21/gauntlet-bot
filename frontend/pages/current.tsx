@@ -99,8 +99,10 @@ export default function Current({ data_str }) {
               <h2 style={h2Style}>Not Reviewed</h2>
               <CurrentWeekTable data={notReviewed} />
               <br />
-              <h2 style={h2Style}>Reviewed</h2>
-              <CurrentWeekTable data={reviewed} />
+              <div style={{ paddingBottom: "20px" }}>
+                <h2 style={h2Style}>Reviewed</h2>
+                <CurrentWeekTable data={reviewed} />
+              </div>
             </>
           ) : (
             <Skeleton></Skeleton>
