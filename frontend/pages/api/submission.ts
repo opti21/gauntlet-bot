@@ -9,6 +9,7 @@ const submission = async (req, res: NextApiResponse) => {
   const { user, week }: { user: string; week: string } = req.query;
   console.log(req.query);
 
+  console.time("submission_review_prisma_call");
   const submission = await prisma.submissions.findFirst({
     where: {
       user: user,
@@ -18,9 +19,11 @@ const submission = async (req, res: NextApiResponse) => {
       user_profile: true,
     },
   });
+  console.timeEnd("submission_review_prisma_call");
 
   let isAdmin = false;
 
+  console.time("submission_review_session_check");
   if (session) {
     console.log(session);
     const admin = await prisma.admins.findFirst({
@@ -34,6 +37,7 @@ const submission = async (req, res: NextApiResponse) => {
       isAdmin = true;
     }
   }
+  console.timeEnd("submission_review_session_check");
 
   // console.log(submission);
   let showButton: Boolean = false;
@@ -48,6 +52,7 @@ const submission = async (req, res: NextApiResponse) => {
       showSub = true;
     }
 
+    console.time("submission_file_parse");
     submission.images.forEach((imageStr, index) => {
       const image = JSON.parse(imageStr);
       const imageObj = {
@@ -67,6 +72,7 @@ const submission = async (req, res: NextApiResponse) => {
 
       files.push(fileObj);
     });
+    console.timeEnd("submission_file_parse");
   }
 
   res.status(200).json({
