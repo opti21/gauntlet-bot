@@ -2,6 +2,7 @@ import { getSession } from "next-auth/client";
 import prisma from "../../util/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
 import { withSentry } from "@sentry/nextjs";
+import { Submission } from "../../types";
 
 const submission = async (req, res: NextApiResponse) => {
   const session = await getSession({ req });
@@ -17,39 +18,6 @@ const submission = async (req, res: NextApiResponse) => {
       user_profile: true,
     },
   });
-
-  let images = [];
-  let files = [];
-
-  if (submission) {
-    if (submission.attachments.length > 0) {
-      submission.attachments.forEach((attachment, index) => {
-        const is_image =
-          /^(?:(?<scheme>[^:\/?#]+):)?(?:\/\/(?<authority>[^\/?#]*))?(?<path>[^?#]*\/)?(?<file>[^?#]*\.(?<extension>[Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Gg][Ii][Ff]))(?:\?(?<query>[^#]*))?(?:#(?<fragment>.*))?$/gm.test(
-            attachment
-          );
-
-        const filenameRegex = /(?=\w+\.\w{3,4}$).+/gim;
-        const filename = attachment.match(filenameRegex);
-
-        if (is_image) {
-          images.push({
-            key: index + 1,
-            is_image: is_image,
-            url: attachment,
-            filename: filename,
-          });
-        } else {
-          files.push({
-            key: index + 1,
-            is_image: is_image,
-            url: attachment,
-            filename: filename,
-          });
-        }
-      });
-    }
-  }
 
   let isAdmin = false;
 
@@ -70,6 +38,8 @@ const submission = async (req, res: NextApiResponse) => {
   // console.log(submission);
   let showButton: Boolean = false;
   let showSub: Boolean = false;
+  let images: String[] = [];
+  let files: String[] = [];
 
   if (submission) {
     if (submission.reviewed === false) {
@@ -77,6 +47,26 @@ const submission = async (req, res: NextApiResponse) => {
     } else {
       showSub = true;
     }
+
+    submission.images.forEach((imageStr, index) => {
+      const image = JSON.parse(imageStr);
+      const imageObj = {
+        key: index + 1,
+        ...image,
+      };
+
+      images.push(imageObj);
+    });
+
+    submission.files.forEach((fileStr, index) => {
+      const file = JSON.parse(fileStr);
+      const fileObj = {
+        key: index + 1,
+        ...file,
+      };
+
+      files.push(fileObj);
+    });
   }
 
   res.status(200).json({

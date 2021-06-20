@@ -9,7 +9,7 @@ export type User = {
   updatedAt: Date;
 };
 
-export type Submision = {
+export type Submission = {
   description: string | null;
   submitted: boolean;
   reviewed: boolean;
@@ -23,6 +23,8 @@ export type Submision = {
   createdAt: Date;
   updatedAt: Date;
   user_profile: User | null;
+  images: string[];
+  files: string[];
 };
 
 export type WeekApiResponse = {
@@ -30,15 +32,15 @@ export type WeekApiResponse = {
     week: string;
     theme: string;
   };
-  not_reviewed: Submision[];
-  reviewed: Submision[];
+  not_reviewed: Submission[];
+  reviewed: Submission[];
   total_num: number;
   reviewed_num: number;
   reviewed_percentage: number;
 };
 
 export type SubmissionResponse = {
-  submission: Submision;
+  submission: Submission;
   images: string[];
   files: string[];
   isAdmin: boolean;

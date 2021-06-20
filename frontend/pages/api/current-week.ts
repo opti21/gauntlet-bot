@@ -2,8 +2,10 @@ require("dotenv").config();
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../util/prisma";
 import { withSentry } from "@sentry/nextjs";
+import { performance } from "perf_hooks";
 
 const currentWeek = async (req: NextApiRequest, res: NextApiResponse) => {
+  const t0 = performance.now();
   const activeWeek = await prisma.gauntlet_weeks.findFirst({
     where: { active: true },
   });
@@ -37,6 +39,8 @@ const currentWeek = async (req: NextApiRequest, res: NextApiResponse) => {
   const reviewedPercentage = Math.floor((reviewed_num / total) * 100);
   console.log(total);
 
+  const t1 = performance.now();
+  console.log(`Current Week API took ${t1 - t0} milliseconds`);
   res.json({
     week_info: {
       week: activeWeek.week,

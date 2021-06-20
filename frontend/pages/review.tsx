@@ -10,6 +10,7 @@ const { Content } = Layout;
 import Submission from "../components/Submission";
 import { SubmissionResponse } from "../types";
 import useSWR, { mutate } from "swr";
+import Loading from "../components/Loading";
 
 const { Title } = Typography;
 
@@ -20,6 +21,8 @@ export default function Review() {
   const { data, error } = useSWR<SubmissionResponse>(
     user && week ? `/api/submission?user=${user}&week=${week}` : null
   );
+
+  console.log(data);
 
   const startReview = async () => {
     const response = await fetch(
@@ -38,18 +41,10 @@ export default function Review() {
       <Head>
         <title>Gauntlet Bot - Submission</title>
       </Head>
-      <Layout className="layout progress-bg">
+      <Layout className="layout bg">
         <BackTop />
         <Gheader />
         <Content style={{ padding: "30px 50px" }}>
-          {/* <Breadcrumb style={{ marginTop: "10px", marginBottom: "10px" }}>
-            <Breadcrumb.Item>
-              <Link href="/current">
-                <a>Current Week</a>
-              </Link>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>Submission</Breadcrumb.Item>
-          </Breadcrumb> */}
           {data ? (
             <>
               {data.submission ? (
@@ -93,7 +88,7 @@ export default function Review() {
               )}
             </>
           ) : (
-            <p> Loading...</p>
+            <Loading />
           )}
         </Content>
         <Gfooter />

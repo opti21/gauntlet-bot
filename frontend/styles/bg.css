@@ -1,0 +1,6 @@
+.bg {
+  background-image: url("/site_bg.jpg");
+  background-repeat: repeat repeat;
+  background-position: center center;
+  background-size: cover;
+}

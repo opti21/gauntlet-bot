@@ -15,6 +15,7 @@ import Gheader from "../components/Gheader";
 import CurrentWeekTable from "../components/CurrentTable";
 import useSWR from "swr";
 import { WeekApiResponse } from "../types";
+import Loading from "../components/Loading";
 
 export default function Current({ data_str }) {
   const { data, error } = useSWR<WeekApiResponse>("/api/current-week");
@@ -22,6 +23,8 @@ export default function Current({ data_str }) {
 
   const notReviewed = data?.not_reviewed;
   const reviewed = data?.reviewed;
+  const notReviewedNum = data?.not_reviewed.length;
+  const reviewedNum = data?.reviewed_num;
 
   const h2Style = {
     textShadow: "2px 2px 13px #000000",
@@ -36,11 +39,11 @@ export default function Current({ data_str }) {
       <Head>
         <title>Gauntlet Bot - Current Week</title>
       </Head>
-      <Layout className="layout progress-bg">
+      <Layout className="layout bg">
         <Gheader activePage={"1"} />
         <Content
           style={{
-            padding: "0 50px",
+            padding: "0 10%",
           }}
         >
           <Title
@@ -96,16 +99,26 @@ export default function Current({ data_str }) {
                   </div>
                 </Col>
               </Row>
-              <h2 style={h2Style}>Not Reviewed</h2>
-              <CurrentWeekTable data={notReviewed} />
+              {notReviewedNum > 0 ? (
+                <>
+                  <h2 style={h2Style}>Not Reviewed</h2>
+                  <CurrentWeekTable data={notReviewed} />
+                </>
+              ) : (
+                <></>
+              )}
               <br />
-              <div style={{ paddingBottom: "20px" }}>
-                <h2 style={h2Style}>Reviewed</h2>
-                <CurrentWeekTable data={reviewed} />
-              </div>
+              {reviewedNum > 0 ? (
+                <div style={{ paddingBottom: "20px" }}>
+                  <h2 style={h2Style}>Reviewed</h2>
+                  <CurrentWeekTable data={reviewed} />
+                </div>
+              ) : (
+                <></>
+              )}
             </>
           ) : (
-            <Skeleton></Skeleton>
+            <Loading />
           )}
         </Content>
         <Gfooter />

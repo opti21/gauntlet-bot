@@ -14,9 +14,9 @@ model gauntlet_weeks {
   theme                 String?       @db.VarChar
   description           String?       @db.VarChar
   editing               Boolean?
-  submissions           submissions[]
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
+  submissions           submissions[]
 }
 
 model submissions {
@@ -30,10 +30,12 @@ model submissions {
   gauntlet_week         Int
   attachments           String[]       @db.VarChar
   user                  String
-  gauntlet_weeks        gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
-  user_profile          users?         @relation(fields: [user], references: [id])
+  files                 String[]       @db.VarChar
+  images                String[]       @db.VarChar
+  gauntlet_weeks        gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])
+  user_profile          users          @relation(fields: [user], references: [id])
 }
 
 model users {
@@ -42,9 +44,9 @@ model users {
   username          String?       @db.VarChar
   twitch_username   String?       @db.VarChar
   currently_editing Int?
-  isAdmin           Boolean       @default(false)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+  isAdmin           Boolean       @default(false)
   submissions       submissions[]
 }
 
@@ -55,7 +57,7 @@ model admins {
 }
 
 model twitch_creds {
-  id             Int     @id @default(autoincrement())
-  access_token   String
-  expires_in     Int
+  id           Int    @id @default(autoincrement())
+  access_token String
+  expires_in   Int
 }
