@@ -86,7 +86,7 @@ const attachmentFix = async () => {
   });
 };
 
-attachmentFix();
+// attachmentFix();
 
 dClient.on("message", async (message) => {
   const prefix = "!!";
