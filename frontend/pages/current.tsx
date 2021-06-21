@@ -25,6 +25,7 @@ export default function Current({ data_str }) {
   const reviewed = data?.reviewed;
   const notReviewedNum = data?.not_reviewed.length;
   const reviewedNum = data?.reviewed_num;
+  console.log(reviewedNum);
 
   const h2Style = {
     textShadow: "2px 2px 13px #000000",

@@ -9,9 +9,9 @@ const currentWeek = async (req: NextApiRequest, res: NextApiResponse) => {
   });
   console.log(activeWeek);
 
-  console.time("submission_prisma_call");
+  console.time("current_week_submission_prisma_call");
   const submissions = await prisma.submissions.findMany({
-    where: { gauntlet_week: activeWeek.week, reviewed: false },
+    where: { gauntlet_week: activeWeek.week },
     include: {
       user_profile: true,
     },
@@ -21,12 +21,12 @@ const currentWeek = async (req: NextApiRequest, res: NextApiResponse) => {
       },
     ],
   });
-  console.timeEnd("submission_prisma_call");
+  console.timeEnd("current_week_submission_prisma_call");
 
   let notReviewed = [];
   let reviewed = [];
 
-  console.time("submission_sort");
+  console.time("current_week_submission_sort");
   submissions.forEach((submission) => {
     if (submission.reviewed === false) {
       notReviewed.push(submission);
@@ -34,7 +34,7 @@ const currentWeek = async (req: NextApiRequest, res: NextApiResponse) => {
       reviewed.push(submission);
     }
   });
-  console.timeEnd("submission_sort");
+  console.timeEnd("current_week_submission_sort");
 
   const total = notReviewed.length + reviewed.length;
   const reviewed_num = reviewed.length;
