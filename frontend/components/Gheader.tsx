@@ -2,7 +2,7 @@ import { Layout, Menu } from "antd";
 const { Header } = Layout;
 import Link from "next/link";
 
-export default function Gheader(props: {activePage: string}) {
+export default function Gheader(props: {activePage?: string}) {
   return (
     <div>
       <Header>
