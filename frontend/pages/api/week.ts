@@ -2,7 +2,7 @@ require("dotenv").config();
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../util/prisma";
 
-export default async (req, res: NextApiResponse) => {
+const week = async (req, res: NextApiResponse) => {
   const { week_num }: { week_num: string } = req.query;
   const activeWeek = await prisma.gauntlet_weeks.findFirst({
     where: { week: parseInt(week_num) },
@@ -49,3 +49,5 @@ export default async (req, res: NextApiResponse) => {
     reviewed_percentage: reviewedPercentage,
   });
 };
+
+export default week;

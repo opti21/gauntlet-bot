@@ -112,27 +112,65 @@ const collectFiles = async (dmChannel, dClient) => {
   const fileCollector = new Discord.MessageCollector(dmChannel, filter);
 
   fileCollector.on("collect", async (fileM) => {
+    console.log(fileM);
     if (fileM.content.toLowerCase() != "done") {
       // console.log(fileM.attachments.size)
       if (fileM.attachments.size > 0) {
         // There are attachments in this message
 
         const user = await getUser(dmChannel.recipient.id);
+        // @typedef String
+        const attachment = fileM.attachments.first().url;
 
-        await prisma.submissions
-          .update({
-            where: {
-              id: user.currently_editing,
-            },
-            data: {
-              attachments: {
-                push: fileM.attachments.first().url,
-              },
-            },
-          })
-          .catch((e) => {
-            console.error(e);
+        const isImage =
+          /^(?:(?<scheme>[^:\/?#]+):)?(?:\/\/(?<authority>[^\/?#]*))?(?<path>[^?#]*\/)?(?<file>[^?#]*\.(?<extension>[Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Gg][Ii][Ff]))(?:\?(?<query>[^#]*))?(?:#(?<fragment>.*))?$/gm.test(
+            attachment
+          );
+
+        const filenameRegex = /(?=\w+\.\w{3,4}$).+/gim;
+        const filename = attachment.match(filenameRegex)[0];
+
+        if (isImage) {
+          const imageObj = JSON.stringify({
+            type: "image",
+            url: attachment,
+            filename: filename,
           });
+          await prisma.submissions
+            .update({
+              where: {
+                id: user.currently_editing,
+              },
+              data: {
+                images: {
+                  push: imageObj,
+                },
+              },
+            })
+            .catch((e) => {
+              console.error(e);
+            });
+        } else {
+          const fileObj = JSON.stringify({
+            type: "file",
+            url: attachment,
+            filename: filename,
+          });
+          await prisma.submissions
+            .update({
+              where: {
+                id: user.currently_editing,
+              },
+              data: {
+                files: {
+                  push: fileObj,
+                },
+              },
+            })
+            .catch((e) => {
+              console.error(e);
+            });
+        }
       } else {
         // User didn't upload a file or sent random text
         fileM
@@ -164,6 +202,14 @@ const reviewSubmission = async (dmChannel, dClient) => {
     },
   });
 
+  let uploadedFiles = "";
+
+  previewSubmission.files.forEach((file) => {
+    const fileObj = JSON.parse(file);
+
+    uploadedFiles += `${fileObj.filename}\n`;
+  });
+
   const submissionPreviewEmbed = new Discord.MessageEmbed()
     .setColor("#db48cf")
     .setTitle(`Review Submission`).setDescription(`
@@ -172,14 +218,16 @@ const reviewSubmission = async (dmChannel, dClient) => {
 
       Reply "yes" or "no"
 
-      If you had any files they are above
+      If you had any images they are shown above
+      **Other types of file uploaded:**
+      ${uploadedFiles}
       **Description:** 
       ${previewSubmission.description}
     `);
-  let previewAttachments = previewSubmission.attachments;
 
-  previewAttachments.forEach((attachment) => {
-    dmChannel.send(attachment);
+  previewSubmission.images.forEach((image) => {
+    const imageObj = JSON.parse(image);
+    dmChannel.send(imageObj.url);
   });
 
   dmChannel.send(submissionPreviewEmbed);
@@ -259,7 +307,7 @@ const returningUserMenu = async (dmChannel, dClient) => {
 
   menuStartReplyCollector.on("collect", async (menuReplyMessage) => {
     // console.log(`Collected ${m.content}`);
-    if (menuReplyMessage.content === "submit") {
+    if (menuReplyMessage.content.toLowerCase() === "submit") {
       const activeWeek = await prisma.gauntlet_weeks.findFirst({
         where: { active: true },
       });
@@ -319,13 +367,13 @@ const returningUserMenu = async (dmChannel, dClient) => {
         }
       }
       menuStartReplyCollector.stop();
-    } else if (menuReplyMessage.content === "edit") {
+    } else if (menuReplyMessage.content.toLowerCase() === "edit") {
       editSubmissionStartMenu(dmChannel, dClient);
       menuStartReplyCollector.stop();
-    } else if (menuReplyMessage.content === "delete") {
+    } else if (menuReplyMessage.content.toLowerCase() === "delete") {
       deleteSubmissionMenu(dmChannel, dClient);
       menuStartReplyCollector.stop();
-    } else if (menuReplyMessage.content === "cancel") {
+    } else if (menuReplyMessage.content.toLowerCase() === "cancel") {
       menuReplyMessage.reply(`Alrighty see ya later :)`).then((m) => {
         m.delete({ timeout: 5000 });
       });
@@ -457,13 +505,22 @@ const editSubmission = async (dmChannel, week, dClient) => {
   );
 
   editMenuReplyCollector.on("collect", (reply) => {
-    if (reply.content === "descrpition" || parseInt(reply.content) === 1) {
+    if (
+      reply.content.toLowerCase() === "descrpition" ||
+      parseInt(reply.content) === 1
+    ) {
       editDescription(dmChannel, submission, dClient);
       editMenuReplyCollector.stop();
-    } else if (reply.content === "files" || parseInt(reply.content) === 2) {
+    } else if (
+      reply.content.toLowerCase() === "files" ||
+      parseInt(reply.content) === 2
+    ) {
       editFiles(dmChannel, submission, dClient);
       editMenuReplyCollector.stop();
-    } else if (reply.content === "cancel" || parseInt(reply.content) === 3) {
+    } else if (
+      reply.content.toLowerCase() === "cancel" ||
+      parseInt(reply.content) === 3
+    ) {
       reply.reply(`Edit cancelled have a great day :)`).then((m) => {
         m.delete({ timeout: 5000 });
       });

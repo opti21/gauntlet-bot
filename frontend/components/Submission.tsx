@@ -20,7 +20,7 @@ export default function Submission({ data }) {
     <>
       <Row>
         <Col span={6}>
-          <Affix offsetTop={10}>
+          <div>
             <Card title="Submission By:" style={{ margin: "0px 10px 0px 0px" }}>
               <div style={{ textAlign: "center" }}>
                 <Avatar size={64} src={data.submission.user_profile.user_pic} />
@@ -74,11 +74,15 @@ export default function Submission({ data }) {
             ) : (
               <></>
             )}
-          </Affix>
+          </div>
         </Col>
         <Col span={18}>
-          <Card>
-            <div style={{ whiteSpace: "pre-line" }}>
+          <Card
+            bodyStyle={{
+              fontSize: "13px",
+            }}
+          >
+            <div style={{ whiteSpace: "pre-line", fontSize: "20px" }}>
               <ReactMarkdown
                 plugins={[gfm]}
                 children={data.submission.description}

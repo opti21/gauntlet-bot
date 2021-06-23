@@ -1,5 +1,6 @@
 import { Provider } from "next-auth/client";
 import "antd/dist/antd.dark.css";
+import "../styles/bg.css";
 import { SWRConfig } from "swr";
 
 const fetcher = (url: string, options: object) =>

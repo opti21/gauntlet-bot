@@ -2,23 +2,9 @@ require("dotenv").config();
 
 const Discord = require("discord.js");
 const dClient = new Discord.Client();
-const mongoose = require("mongoose");
-const fs = require("fs");
 const allowedAdmins = ["opti21"];
 const submissionFuncs = require("./submissionFuncs");
-const GauntletWeeks = require("./Models/GauntletWeeks");
 const { prisma } = require("./util/prisma");
-
-mongoose.connect(
-  `mongodb+srv://gauntlet:${process.env.MONGO_PASS}@cluster0.9bvpn.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`,
-  { useNewUrlParser: true, useUnifiedTopology: true }
-);
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", function () {
-  // we're connected!
-  console.log("Mongoose connected");
-});
 
 const {
   editGauntletStart,
@@ -30,6 +16,77 @@ const {
 dClient.once("ready", () => {
   console.log("Discord Ready!");
 });
+
+const attachmentFix = async () => {
+  const submissions = await prisma.submissions.findMany();
+
+  submissions.forEach(async (submission) => {
+    if (
+      submission.attachments.length > 0 &&
+      submission.images.length === 0 &&
+      submission.files.length === 0
+    ) {
+      submission.attachments.forEach(async (attachment) => {
+        const isImage =
+          /^(?:(?<scheme>[^:\/?#]+):)?(?:\/\/(?<authority>[^\/?#]*))?(?<path>[^?#]*\/)?(?<file>[^?#]*\.(?<extension>[Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Gg][Ii][Ff]))(?:\?(?<query>[^#]*))?(?:#(?<fragment>.*))?$/gm.test(
+            attachment
+          );
+
+        const filenameRegex = /(?=\w+\.\w{3,4}$).+/gim;
+        const filename = attachment.match(filenameRegex)[0];
+
+        if (isImage) {
+          const imageObj = JSON.stringify({
+            type: "image",
+            url: attachment,
+            filename: filename,
+          });
+          await prisma.submissions
+            .update({
+              where: {
+                id: submission.id,
+              },
+              data: {
+                images: {
+                  push: imageObj,
+                },
+              },
+            })
+            .catch((e) => {
+              console.error(e);
+            });
+        } else {
+          const fileObj = JSON.stringify({
+            type: "file",
+            url: attachment,
+            filename: filename,
+          });
+          await prisma.submissions
+            .update({
+              where: {
+                id: submission.id,
+              },
+              data: {
+                files: {
+                  push: fileObj,
+                },
+              },
+            })
+            .catch((e) => {
+              console.error(e);
+            });
+        }
+      });
+      await prisma.submissions.update({
+        where: { id: submission.id },
+        data: { attachments: [] },
+      });
+      console.log(`Submission id ${submission.id} has been updated`);
+    }
+  });
+};
+
+// attachmentFix();
 
 dClient.on("message", async (message) => {
   const prefix = "!!";
@@ -143,21 +200,18 @@ dClient.on("message", async (message) => {
   }
 
   if (command === "week") {
-    fs.readFile("gauntletInfo.json", async (err, data) => {
-      if (err) console.log(err);
-      const gauntletInfo = await GauntletWeeks.findOne({
-        active: true,
-      });
-      console.log(gauntletInfo);
-      const infoEmbed = new Discord.MessageEmbed()
-        .setColor("db48cf")
-        .setTitle(
-          `Week ${gauntletInfo.week}'s Gauntlet theme is **${gauntletInfo.theme}**`
-        )
-        .setDescription(`${gauntletInfo.description}`);
-
-      message.channel.send(infoEmbed);
+    const gauntletInfo = await prisma.gauntlet_weeks.findFirst({
+      where: { active: true },
     });
+    console.log(gauntletInfo);
+    const infoEmbed = new Discord.MessageEmbed()
+      .setColor("db48cf")
+      .setTitle(
+        `Week ${gauntletInfo.week}'s Gauntlet theme is **${gauntletInfo.theme}**`
+      )
+      .setDescription(`${gauntletInfo.description}`);
+
+    message.channel.send(infoEmbed);
   }
 
   if (command === "gadmin") {
@@ -212,6 +266,25 @@ dClient.on("message", async (message) => {
         msg.delete({ timeout: 5000 });
       });
     }
+  }
+
+  if (
+    command === "getnames" &&
+    allowedAdmins.includes(message.author.username)
+  ) {
+    const activeWeek = await prisma.gauntlet_weeks.findFirst({
+      where: { active: true },
+    });
+    const submissions = await prisma.submissions.findMany({
+      where: { gauntlet_week: activeWeek.week },
+      include: { user_profile: true },
+    });
+    let userStr = "";
+
+    submissions.forEach((sub) => {
+      userStr += `${sub.user_profile.username}\n`;
+    });
+    message.reply(userStr);
   }
 });
 

@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Providers from "next-auth/providers";
 
-export default NextAuth({
+const auth = NextAuth({
   // Configure one or more authentication providers
   callbacks: {
     async redirect(url, baseUrl) {
@@ -18,3 +18,5 @@ export default NextAuth({
   // A database is optional, but required to persist accounts in a database
   database: process.env.MONGODB_URI,
 });
+
+export default auth;
