@@ -1,5 +1,4 @@
 require("dotenv").config();
-import { withSentry } from "@sentry/nextjs";
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../util/prisma";
 
@@ -51,4 +50,4 @@ const week = async (req, res: NextApiResponse) => {
   });
 };
 
-export default withSentry(week);
+export default week;

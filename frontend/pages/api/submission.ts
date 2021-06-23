@@ -1,7 +1,6 @@
 import { getSession } from "next-auth/client";
 import prisma from "../../util/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
-import { withSentry } from "@sentry/nextjs";
 import { Submission } from "../../types";
 
 const submission = async (req, res: NextApiResponse) => {
@@ -85,4 +84,4 @@ const submission = async (req, res: NextApiResponse) => {
   });
 };
 
-export default withSentry(submission);
+export default submission;

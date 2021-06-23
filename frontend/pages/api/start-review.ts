@@ -8,7 +8,6 @@ dayjs.extend(duration);
 import { getSession } from "next-auth/client";
 import prisma from "../../util/prisma";
 import { NextApiResponse } from "next";
-import { withSentry } from "@sentry/nextjs";
 import { submissions } from "@prisma/client";
 
 let DISCORD_WEBHOOK: string;
@@ -215,4 +214,4 @@ const generateVodLink = async (submission: submissions) => {
     });
 };
 
-export default withSentry(startReview);
+export default startReview;
