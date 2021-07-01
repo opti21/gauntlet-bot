@@ -1,4 +1,12 @@
-import { Layout, Typography, Row, Col, Progress, Statistic } from "antd";
+import {
+  Layout,
+  Typography,
+  Row,
+  Col,
+  Progress,
+  Statistic,
+  Skeleton,
+} from "antd";
 const { Content } = Layout;
 const { Title } = Typography;
 import Gfooter from "../components/Gfooter";
@@ -9,7 +17,7 @@ import useSWR from "swr";
 import { WeekApiResponse } from "../types";
 import Loading from "../components/Loading";
 
-export default function Current() {
+export default function Current({ data_str }) {
   const { data, error } = useSWR<WeekApiResponse>("/api/current-week");
   console.log(data);
 
