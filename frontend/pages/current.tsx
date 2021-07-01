@@ -1,12 +1,4 @@
-import {
-  Layout,
-  Typography,
-  Row,
-  Col,
-  Progress,
-  Statistic,
-  Skeleton,
-} from "antd";
+import { Layout, Typography, Row, Col, Progress, Statistic } from "antd";
 const { Content } = Layout;
 const { Title } = Typography;
 import Gfooter from "../components/Gfooter";
@@ -17,14 +9,14 @@ import useSWR from "swr";
 import { WeekApiResponse } from "../types";
 import Loading from "../components/Loading";
 
-export default function Current({ data_str }) {
+export default function Current() {
   const { data, error } = useSWR<WeekApiResponse>("/api/current-week");
   console.log(data);
 
-  const notReviewed = data?.not_reviewed;
-  const reviewed = data?.reviewed;
-  const notReviewedNum = data?.not_reviewed.length;
-  const reviewedNum = data?.reviewed_num;
+  const notReviewed = data ? data.not_reviewed : [];
+  const reviewed = data ? data.reviewed : [];
+  const notReviewedNum = data ? data.not_reviewed.length : 0;
+  const reviewedNum = data ? data.reviewed_num : 0;
   console.log(reviewedNum);
 
   const h2Style = {
