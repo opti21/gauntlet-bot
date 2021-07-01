@@ -43,7 +43,7 @@ export default function Review() {
       </Head>
       <Layout className="layout bg">
         <BackTop />
-        <Gheader />
+        <Gheader activePage={-1} />
         <Content style={{ padding: "30px 50px" }}>
           {data ? (
             <>
