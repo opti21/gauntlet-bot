@@ -9,7 +9,6 @@
     "release": "release-it"
   },
   "dependencies": {
-    "@ant-design/icons": "^4.6.2",
     "@prisma/client": "^2.25.0",
     "antd": "^4.16.3",
     "apollo-server-micro": "^2.25.2",
