@@ -38,7 +38,7 @@ export default function Week() {
         <title>Gauntlet Bot - Previous Week</title>
       </Head>
       <Layout className="layout">
-        <Gheader />
+        <Gheader activePage={-1} />
         <Content style={{ padding: "0 50px" }}>
           {data ? (
             <>
