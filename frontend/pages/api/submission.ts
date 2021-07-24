@@ -8,8 +8,8 @@ const submission = async (req, res: NextApiResponse) => {
   const { user, week }: { user: string; week: string } = req.query;
   console.log(req.query);
 
-  console.time("submission_review_prisma_call");
-  const submission = await prisma.submissions.findFirst({
+  // console.time("submission_review_prisma_call");
+  const submission: Submission = await prisma.submissions.findFirst({
     where: {
       user: user,
       gauntlet_week: parseInt(week),
@@ -18,11 +18,11 @@ const submission = async (req, res: NextApiResponse) => {
       user_profile: true,
     },
   });
-  console.timeEnd("submission_review_prisma_call");
+  // console.timeEnd("submission_review_prisma_call");
 
   let isAdmin = false;
 
-  console.time("submission_review_session_check");
+  // console.time("submission_review_session_check");
   if (session) {
     console.log(session);
     const admin = await prisma.admins.findFirst({
@@ -36,7 +36,7 @@ const submission = async (req, res: NextApiResponse) => {
       isAdmin = true;
     }
   }
-  console.timeEnd("submission_review_session_check");
+  // console.timeEnd("submission_review_session_check");
 
   // console.log(submission);
   let showButton: Boolean = false;
