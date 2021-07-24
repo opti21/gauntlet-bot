@@ -16,10 +16,10 @@ const { Title } = Typography;
 
 export default function Review() {
   const router = useRouter();
-  const { user, week } = router.query;
+  const { submission: subID } = router.query;
 
   const { data, error } = useSWR<SubmissionResponse>(
-    user && week ? `/api/submission?user=${user}&week=${week}` : null
+    subID ? `/api/submission?subID=${subID}` : null
   );
 
   console.log(data);
@@ -30,7 +30,7 @@ export default function Review() {
     ).then((r) => r.json());
     console.log(response);
     if (!response.error) {
-      mutate(`/api/submission?user=${user}&week=${week}`);
+      mutate(`/api/submission?subID=${subID}`);
     } else {
       console.error(response);
     }

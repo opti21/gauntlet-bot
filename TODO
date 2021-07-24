@@ -1,14 +1,13 @@
 ☐ Create README
 Frontend:
   next.js Next auth
+  ☐ Remake new index page
   ✔ Let users be able to past submissions @done(21-04-21 00:23)
-  ☐ Figure out how to parse discord markdown
-  ☐ Add login button to header
-  ☐ Change auth to discord
-  ☐ combine header and footer into one file
-  ☐ Create Better index page
-    ☐ Add countdown to next Gauntlet
-  ☐ Add Submission status
+  ✔ Figure out how to parse discord markdown @done(21-07-24 15:30)
+  ✔ Add login button to header @done(21-07-24 15:30)
+  ✔ Change auth to discord @done(21-07-24 15:29)
+  ✔ Create Better index page @done(21-07-24 15:29)
+  ✔ Add Submission status @done(21-07-24 15:29)
     Shows if they can still submit or not
   ☐ Add moderating tools
   ✔ Add twitch Auth @done(21-03-12 02:34)

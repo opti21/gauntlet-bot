@@ -1,18 +1,17 @@
-import { getSession } from "next-auth/client";
 import prisma from "../../util/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Submission } from "../../types";
+import { getSession } from "@auth0/nextjs-auth0";
 
 const submission = async (req, res: NextApiResponse) => {
-  const session = await getSession({ req });
-  const { user, week }: { user: string; week: string } = req.query;
+  const { user } = getSession(req, res);
+  const { subID }: { subID: string } = req.query;
   console.log(req.query);
 
   // console.time("submission_review_prisma_call");
   const submission: Submission = await prisma.submissions.findFirst({
     where: {
-      user: user,
-      gauntlet_week: parseInt(week),
+      id: parseInt(subID),
     },
     include: {
       user_profile: true,
@@ -23,14 +22,14 @@ const submission = async (req, res: NextApiResponse) => {
   let isAdmin = false;
 
   // console.time("submission_review_session_check");
-  if (session) {
-    console.log(session);
+  if (user) {
+    console.log(user);
     const admin = await prisma.admins.findFirst({
       where: {
-        twitch_username: session.user.name,
+        twitch_username: user.name,
       },
     });
-    console.log(session.user.name);
+    console.log(user.name);
 
     if (admin) {
       isAdmin = true;

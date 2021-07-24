@@ -1,4 +1,3 @@
-require("dotenv").config();
 import { PrismaClient } from "@prisma/client";
 
 const getWeek = async (req, res) => {

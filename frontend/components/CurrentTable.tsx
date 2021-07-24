@@ -50,7 +50,7 @@ export default function CurrentWeekTable({ data }) {
       dataIndex: "action",
       key: "action",
       render: (text, record) => (
-        <Link href={`/review?user=${record.user}&week=${record.gauntlet_week}`}>
+        <Link href={`/review?submission=${record.id}`}>
           <a>View</a>
         </Link>
       ),

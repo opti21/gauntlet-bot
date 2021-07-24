@@ -1,4 +1,3 @@
-require("dotenv").config();
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../util/prisma";
 

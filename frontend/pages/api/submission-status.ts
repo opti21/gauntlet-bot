@@ -1,4 +1,3 @@
-require("dotenv").config();
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getSession, withApiAuthRequired } from "@auth0/nextjs-auth0";
 import prisma from "../../util/prisma";
