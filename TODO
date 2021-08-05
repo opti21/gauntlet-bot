@@ -1,7 +1,15 @@
 ☐ Create README
 Frontend:
   next.js Next auth
+  ☐ finish adding user menu for submission owner
+    - edit, delete buttons
   ☐ Remake new index page
+  ☐ fix submit API
+  ☐ fix previous week page
+  ☐ fix inidividual previous week page
+  ☐ find better logic for error alerts on user page
+  ✔ add user page @done(21-07-30 18:41)
+  ✔ fix header to check for new auth0 session @started(21-07-24 20:15) @done(21-07-24 20:15) @lasted(48s)
   ✔ Let users be able to past submissions @done(21-04-21 00:23)
   ✔ Figure out how to parse discord markdown @done(21-07-24 15:30)
   ✔ Add login button to header @done(21-07-24 15:30)

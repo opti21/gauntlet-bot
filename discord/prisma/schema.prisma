@@ -29,7 +29,7 @@ model submissions {
   id                    Int            @id @default(autoincrement())
   gauntlet_week         Int
   attachments           String[]       @db.VarChar
-  files                 String[]       @db.VarChar
+  files                 String[]      @db.VarChar
   images                String[]       @db.VarChar
   user                  String
   gauntlet_weeks        gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])

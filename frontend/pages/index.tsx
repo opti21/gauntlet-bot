@@ -1,39 +1,54 @@
-import { useSession } from "next-auth/client";
-import Link from "next/link";
-import Head from "next/head";
-import { Layout, Button } from "antd";
-import Title from "antd/lib/typography/Title";
-import Loading from "../components/Loading";
-
+import { Layout, Typography, Row, Col, Progress, Statistic } from "antd";
 const { Content } = Layout;
+const { Title } = Typography;
+import Gfooter from "../components/Gfooter";
+import Head from "next/head";
+import Gheader from "../components/Gheader";
+import CurrentWeekTable from "../components/CurrentTable";
+import useSWR from "swr";
+import Loading from "../components/Loading";
+import { useRouter } from "next/router";
 
-export default function Home() {
-  const [session, loading] = useSession();
+export default function Current() {
+  const { data, error } = useSWR("/api/");
 
-  if (!loading) {
-    return (
-      <Layout>
-        <Head>
-          <title>Gauntlet Bot</title>
-        </Head>
-        <Content style={{ padding: "0 50px" }}>
-          <Title>Gauntlet Bot</Title>
-          {session ? (
-            <>
-              <p>Signed in as {session.user.name}</p>
-              <Link href="/current">
-                <a>Current</a>
-              </Link>
-            </>
-          ) : (
-            <Button type="primary" size="large">
-              <Link href={"/api/auth/signin"}>Sign In</Link>
-            </Button>
-          )}
+  const router = useRouter();
+  const { submission: subID } = router.query;
+
+  const h2Style = {
+    textShadow: "2px 2px 13px #000000",
+  };
+
+  // console.log(notReviewed);
+
+  // return <>test</>;
+
+  return (
+    <>
+      <Head>
+        <title>Gauntlet Bot - Current Week</title>
+      </Head>
+      <Layout className="layout bg">
+        <Gheader activePage={-1} />
+        <Content
+          style={{
+            padding: "0 10%",
+          }}
+        >
+          <Title
+            style={{
+              marginTop: "25px",
+              marginBottom: "100px",
+              textShadow: "2px 2px 13px #000000",
+              fontSize: "100px",
+            }}
+          >
+            Gauntlet
+            <div>Bot</div>
+          </Title>
         </Content>
+        <Gfooter />
       </Layout>
-    );
-  } else {
-    return <Loading />;
-  }
+    </>
+  );
 }

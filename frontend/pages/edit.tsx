@@ -9,17 +9,24 @@ import SubmitForm from "../components/SubmitForm";
 import { useUser } from "@auth0/nextjs-auth0";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import useSWR from "swr";
+import { useRouter } from "next/router";
+import SubEditForm from "../components/SubEditForm";
 
-export default withPageAuthRequired(function Current() {
+export default withPageAuthRequired(function Edit() {
+  const router = useRouter();
+  const { submission: subID } = router.query;
   const { user, error: userError, isLoading } = useUser();
-  const { data, error: statusError } = useSWR(
-    user ? "/api/submission-status" : null
+
+  const { data: submissionData, error: submissionError } = useSWR(
+    user ? `/api/submission?subID=${subID}` : null
   );
+  console.log(submissionData);
+  console.log(user);
 
   return (
     <>
       <Head>
-        <title>Gauntlet Bot - Submit</title>
+        <title>Gauntlet Bot - Edit</title>
       </Head>
       <Layout className="layout bg">
         <Gheader activePage={"4"} />
@@ -34,17 +41,17 @@ export default withPageAuthRequired(function Current() {
               textShadow: "2px 2px 13px #000000",
             }}
           >
-            Submit
+            Edit Submission
           </Title>
-          {!userError && !statusError ? (
-            !isLoading && data ? (
-              !data.already_submitted ? (
-                <SubmitForm user={user} />
+          {!userError && !submissionError ? (
+            !isLoading && submissionData ? (
+              submissionData.submission.user === user.sub.split("|")[2] ? (
+                <SubEditForm submission={submissionData.submission} />
               ) : (
                 <Alert
                   style={{ marginBottom: "20px" }}
-                  type="info"
-                  message="You have already submitted this week"
+                  type="error"
+                  message="This is not your submission"
                 />
               )
             ) : (
@@ -53,7 +60,7 @@ export default withPageAuthRequired(function Current() {
           ) : (
             <Alert
               style={{ marginBottom: "20px" }}
-              type={"error"}
+              type="error"
               message="Error fetching necessary data"
             />
           )}

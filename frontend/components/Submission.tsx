@@ -1,16 +1,6 @@
-import {
-  Card,
-  Avatar,
-  Row,
-  Col,
-  Affix,
-  Typography,
-  Image,
-  Skeleton,
-} from "antd";
-import ReactMarkdown from "react-markdown";
-import gfm from "remark-gfm";
-import { PrismaClient } from "@prisma/client";
+import { Card, Avatar, Row, Col, Typography, Image } from "antd";
+import Link from "next/link";
+import Editor from "rich-markdown-editor";
 
 const { Title } = Typography;
 
@@ -23,8 +13,20 @@ export default function Submission({ data }) {
           <div>
             <Card title="Submission By:" style={{ margin: "0px 10px 0px 0px" }}>
               <div style={{ textAlign: "center" }}>
-                <Avatar size={64} src={data.submission.user_profile.user_pic} />
-                <Title level={4}>{data.submission.user_profile.username}</Title>
+                <Link href={`/user/${data.submission.user_profile.username}`}>
+                  <a>
+                    <Avatar
+                      size={64}
+                      src={data.submission.user_profile.user_pic}
+                      alt={`${data.submission.user_profile.username}'s profile picture`}
+                    />
+                  </a>
+                </Link>
+                <Link href={`/user/${data.submission.user_profile.username}`}>
+                  <a>
+                    <h3>{data.submission.user_profile.username}</h3>
+                  </a>
+                </Link>
               </div>
             </Card>
             {data.images.length > 0 ? (
@@ -79,15 +81,15 @@ export default function Submission({ data }) {
         <Col span={18}>
           <Card
             bodyStyle={{
-              fontSize: "13px",
+              fontSize: "20px",
+              backgroundColor: "#181A1B",
             }}
           >
-            <div style={{ whiteSpace: "pre-line", fontSize: "20px" }}>
-              <ReactMarkdown
-                plugins={[gfm]}
-                children={data.submission.description}
-              />
-            </div>
+            <Editor
+              dark={true}
+              readOnly={true}
+              value={data.submission.description}
+            />
           </Card>
         </Col>
       </Row>

@@ -1,5 +1,5 @@
 import { Layout, Menu, Button } from "antd";
-import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
+import { LoginOutlined, LogoutOutlined, UserOutlined } from "@ant-design/icons";
 const { Header } = Layout;
 import Link from "next/link";
 import { useUser } from "@auth0/nextjs-auth0";
@@ -30,6 +30,16 @@ export default function Gheader({ activePage }) {
           </Menu.Item>
         </Menu>
         <div style={{ float: "right", padding: "0 10px 0 10px" }}>
+          {isLoading ? null : user ? (
+            <Button
+              href={`/user/${user.nickname}`}
+              style={{ marginRight: "10px" }}
+              icon={<UserOutlined />}
+            >
+              {user.nickname}
+            </Button>
+          ) : null}
+
           {isLoading ? (
             <Button type="default" loading>
               Loading
@@ -37,7 +47,7 @@ export default function Gheader({ activePage }) {
           ) : (
             <Button
               type="default"
-              href={user ? "/api/auth/signout" : "/api/auth/signin"}
+              href={user ? "/api/auth/logout" : "/api/auth/login"}
               // @ts-ignore
               danger={user}
               icon={user ? <LogoutOutlined /> : <LoginOutlined />}

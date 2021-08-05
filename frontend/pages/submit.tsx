@@ -10,7 +10,7 @@ import { useUser } from "@auth0/nextjs-auth0";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import useSWR from "swr";
 
-export default withPageAuthRequired(function Current() {
+export default withPageAuthRequired(function Submit() {
   const { user, error: userError, isLoading } = useUser();
   const { data, error: statusError } = useSWR(
     user ? "/api/submission-status" : null

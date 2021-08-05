@@ -7,6 +7,7 @@ export type User = {
   isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
+  submissions?: Submission[];
 };
 
 export type Submission = {
@@ -46,4 +47,12 @@ export type SubmissionResponse = {
   isAdmin: boolean;
   show_button: boolean;
   show_sub: boolean;
+};
+
+export type File = {
+  url: string;
+  filename?: string;
+  type?: string;
+  etag?: string;
+  key?: string;
 };

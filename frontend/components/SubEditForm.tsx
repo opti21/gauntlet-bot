@@ -7,8 +7,7 @@ import Editor from "rich-markdown-editor";
 import * as yup from "yup";
 import { toast } from "react-toastify";
 
-export default function SubmitForm({ user }) {
-  console.log(user);
+export default function SubEditForm({ submission }) {
   const formSchema = yup.object().shape({
     description: yup.string().required(),
     files: yup.array().of(
@@ -19,9 +18,33 @@ export default function SubmitForm({ user }) {
       })
     ),
   });
+
+  const uploadedFiles = [];
+  const mappedImages = submission.images.map((image) => {
+    const imageData = JSON.parse(image);
+    return {
+      name: imageData.key,
+      url: imageData.url,
+    };
+  });
+  const mappedFiles = submission.files.map((file) => {
+    const imageData = JSON.parse(file);
+    return {
+      name: imageData.key,
+      url: imageData.url,
+    };
+  });
+  mappedImages.forEach((image) => {
+    uploadedFiles.push(image);
+  });
+
+  mappedFiles.forEach((file) => {
+    uploadedFiles.push(file);
+  });
+
   const handleForm = async (values: any, setSubmitting: any) => {
-    fetch("/api/submit", {
-      method: "POST",
+    fetch("/api/submission", {
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
@@ -30,14 +53,11 @@ export default function SubmitForm({ user }) {
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          router.push(`/review?submission=${res.sub_id}`);
+          router.push("/");
         } else {
           toast.error("Error submitting form");
-          console.error(res);
+          console.error(res.error);
         }
-      })
-      .catch((err) => {
-        console.error(err);
       });
     console.log(values);
   };
@@ -45,7 +65,10 @@ export default function SubmitForm({ user }) {
   return (
     <div>
       <Formik
-        initialValues={{ description: "", files: [] }}
+        initialValues={{
+          description: submission.description,
+          files: uploadedFiles,
+        }}
         validate={(values) => {
           const errors = {};
           if (!values.description) {
@@ -68,7 +91,11 @@ export default function SubmitForm({ user }) {
             }}
           >
             <Field name="description" id="description">
-              {({ field, form: { touched, errors, setFieldValue }, meta }) => (
+              {({
+                field,
+                form: { touched, errors, setFieldValue, initialValues },
+                meta,
+              }) => (
                 <div
                   style={{
                     padding: "20px",
@@ -76,6 +103,7 @@ export default function SubmitForm({ user }) {
                 >
                   <Editor
                     placeholder="Insert your amazing description here"
+                    defaultValue={initialValues.description}
                     dark={true}
                     onChange={(getValue) => {
                       const value = getValue();
@@ -98,11 +126,16 @@ export default function SubmitForm({ user }) {
             </Field>
 
             <Field name="files" id="files">
-              {({ field, form: { values, setFieldValue }, meta }) => (
+              {({
+                field,
+                form: { values, setFieldValue, initialValues },
+                meta,
+              }) => (
                 <div style={{ paddingBottom: "20px" }}>
                   <Dragger
                     name="files"
                     multiple={true}
+                    defaultFileList={initialValues.files}
                     action="/api/files/upload"
                     accept="image/*,.pdf"
                     onChange={(info) => {
