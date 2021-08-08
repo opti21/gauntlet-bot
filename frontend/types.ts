@@ -28,6 +28,19 @@ export type Submission = {
   files: string[];
 };
 
+export type FrontendSubmission = {
+  id: number;
+  description: string;
+  user_profile: {
+    id: string;
+    username: string;
+    user_pic: string;
+  };
+  gauntlet_week;
+  images: File[];
+  files: File[];
+};
+
 export type WeekApiResponse = {
   week_info: {
     week: string;

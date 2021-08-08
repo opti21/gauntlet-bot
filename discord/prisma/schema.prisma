@@ -48,6 +48,15 @@ model users {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   submissions       submissions[]
+  files             files[]
+}
+
+model files {
+  id       Int    @id @default(autoincrement())
+  filename String
+  url      String
+  user_id  String
+  user  users  @relation(fields: [user_id], references: [id])
 }
 
 model admins {

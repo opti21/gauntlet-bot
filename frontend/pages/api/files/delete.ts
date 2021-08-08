@@ -11,17 +11,29 @@ export default withApiAuthRequired(async function deleteAPI(
     const file = req.body.file;
     try {
       console.log(file);
-      // const deleteResponse = await s3.send(
-      //   new DeleteObjectCommand({
-      //     Bucket: process.env.S3_BUCKET,
-      //     Key: file.response.key,
-      //   })
-      // );
-      // console.log(deleteResponse);
+      if (file.response.key === undefined) {
+        const deleteResponse = await s3.send(
+          new DeleteObjectCommand({
+            Bucket: process.env.S3_BUCKET,
+            Key: file.name,
+          })
+        );
+
+        console.log(deleteResponse);
+      } else {
+        const deleteResponse = await s3.send(
+          new DeleteObjectCommand({
+            Bucket: process.env.S3_BUCKET,
+            Key: file.response.key,
+          })
+        );
+        console.log(deleteResponse);
+      }
       res.status(200).json({ message: "File deleted" });
       console.log(req.body);
     } catch (error) {
       res.status(500).json({ error: error });
+      console.error(error);
     }
   }
 });

@@ -2,6 +2,8 @@ import "antd/dist/antd.dark.css";
 import "../styles/bg.css";
 import { SWRConfig } from "swr";
 import { UserProvider } from "@auth0/nextjs-auth0";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 interface fetcherError extends Error {
   info?: string;
@@ -30,6 +32,7 @@ export default function App({ Component, pageProps }) {
   return (
     <UserProvider>
       <SWRConfig value={{ fetcher, revalidateOnFocus: false }}>
+        <ToastContainer />
         <Component {...pageProps} />
       </SWRConfig>
     </UserProvider>

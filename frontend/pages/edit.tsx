@@ -18,10 +18,9 @@ export default withPageAuthRequired(function Edit() {
   const { user, error: userError, isLoading } = useUser();
 
   const { data: submissionData, error: submissionError } = useSWR(
-    user ? `/api/submission?subID=${subID}` : null
+    user ? `/api/submissions?subID=${subID}` : null
   );
   console.log(submissionData);
-  console.log(user);
 
   return (
     <>

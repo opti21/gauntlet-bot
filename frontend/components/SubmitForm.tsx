@@ -20,7 +20,7 @@ export default function SubmitForm({ user }) {
     ),
   });
   const handleForm = async (values: any, setSubmitting: any) => {
-    fetch("/api/submit", {
+    fetch("/api/submissions/submit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -107,6 +107,8 @@ export default function SubmitForm({ user }) {
                     accept="image/*,.pdf"
                     onChange={(info) => {
                       const { status } = info.file;
+                      if (status === "uploading") {
+                      }
                       if (status === "done") {
                         setFieldValue("files", [
                           ...field.value,
