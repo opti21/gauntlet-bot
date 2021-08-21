@@ -1,46 +1,93 @@
-import {
-  Card,
-  Avatar,
-  Row,
-  Col,
-  Affix,
-  Typography,
-  Image,
-  Skeleton,
-} from "antd";
-import ReactMarkdown from "react-markdown";
-import gfm from "remark-gfm";
-import { PrismaClient } from "@prisma/client";
+import { Card, Avatar, Row, Col, Typography, Image, Button } from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import Link from "next/link";
+import Editor from "rich-markdown-editor";
+import { File, FrontendSubmission } from "../types";
+import Swal from "sweetalert2";
+import { toast } from "react-toastify";
+import router from "next/router";
 
 const { Title } = Typography;
 
-export default function Submission({ data }) {
-  console.log(data);
+interface DataProp {
+  submission: FrontendSubmission;
+  isSubOwner: boolean;
+  isAdmin: boolean;
+  images: File[];
+  files: File[];
+}
+
+export default function SubmissionContent({
+  submission,
+  images,
+  files,
+  isSubOwner,
+  isAdmin,
+}: DataProp) {
+  console.log("sub comp");
+  console.log(submission.uploaded_files);
   return (
     <>
       <Row>
         <Col span={6}>
           <div>
+            {isAdmin || isSubOwner ? (
+              <div>
+                <Card
+                  style={{
+                    margin: "0px 10px 10px 0px",
+                    textAlign: "center",
+                  }}
+                  bodyStyle={{
+                    backgroundColor: "#181A1B",
+                  }}
+                >
+                  <Button
+                    href={`/edit?submission=${submission.id}`}
+                    type="default"
+                    icon={<EditOutlined />}
+                    style={{ marginBottom: "20px" }}
+                    block
+                  >
+                    Edit
+                  </Button>
+                </Card>
+              </div>
+            ) : null}
             <Card title="Submission By:" style={{ margin: "0px 10px 0px 0px" }}>
               <div style={{ textAlign: "center" }}>
-                <Avatar size={64} src={data.submission.user_profile.user_pic} />
-                <Title level={4}>{data.submission.user_profile.username}</Title>
+                <Link href={`/user/${submission.user_profile.username}`}>
+                  <a>
+                    <Avatar
+                      size={64}
+                      src={submission.user_profile.user_pic}
+                      alt={`${submission.user_profile.username}'s profile picture`}
+                    />
+                  </a>
+                </Link>
+                <Link href={`/user/${submission.user_profile.username}`}>
+                  <a>
+                    <h3>{submission.user_profile.username}</h3>
+                  </a>
+                </Link>
               </div>
             </Card>
-            {data.images.length > 0 ? (
+            {images.length > 0 ? (
               <Card title="Images:" style={{ margin: "10px 10px 0px 0px" }}>
                 <Image.PreviewGroup>
-                  {data.images.map((image, index) => {
+                  {images.map((image, index) => {
                     console.log("is image");
                     return (
-                      <div key={index} style={{ margin: "5px", float: "left" }}>
+                      <div
+                        key={index + 1}
+                        style={{ margin: "5px", float: "left" }}
+                      >
                         <Image
                           width={75}
                           src="/preview.png"
                           preview={{
                             src: `${image.url}`,
                           }}
-                          alt={image.filename}
                         />
                       </div>
                     );
@@ -50,44 +97,50 @@ export default function Submission({ data }) {
             ) : (
               <></>
             )}
-            {data.files.length > 0 ? (
-              <Card title="Files:" style={{ margin: "10px 10px 0px 0px" }}>
-                <ul>
-                  {data.files.map((file, index) => {
-                    return (
-                      <li key={index}>
-                        <a href={file.url} key={file.key}>
-                          {file.filename}
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
+            {files.length > 0 ? (
+              <Card
+                title="Files:"
+                style={{
+                  margin: "10px 10px 0px 0px",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {files.map((file, index) => {
+                  return (
+                    <div key={index}>
+                      <a href={file.url} key={index + 1} target="_blank">
+                        {file.filename}
+                      </a>
+                    </div>
+                  );
+                })}
               </Card>
             ) : (
               <></>
             )}
-            {data.submission.vod_link ? (
+            {/* {submission.submission.vod_link ? (
               <Card title="Vod Link:" style={{ margin: "10px 10px 0px 0px" }}>
-                <a href={data.submission.vod_link}>Watch Review</a>
+                <a href={submission.submission.vod_link}>Watch Review</a>
               </Card>
             ) : (
               <></>
-            )}
+            )} */}
           </div>
         </Col>
         <Col span={18}>
           <Card
             bodyStyle={{
-              fontSize: "13px",
+              fontSize: "20px",
+              backgroundColor: "#181A1B",
             }}
           >
-            <div style={{ whiteSpace: "pre-line", fontSize: "20px" }}>
-              <ReactMarkdown
-                plugins={[gfm]}
-                children={data.submission.description}
-              />
-            </div>
+            <Editor
+              dark={true}
+              readOnly={true}
+              value={submission.description}
+            />
           </Card>
         </Col>
       </Row>

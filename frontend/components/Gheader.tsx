@@ -1,11 +1,11 @@
 import { Layout, Menu, Button } from "antd";
-import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
+import { LoginOutlined, LogoutOutlined, UserOutlined } from "@ant-design/icons";
 const { Header } = Layout;
 import Link from "next/link";
-import { useSession } from "next-auth/client";
+import { useUser } from "@auth0/nextjs-auth0";
 
 export default function Gheader({ activePage }) {
-  const [session, loading] = useSession();
+  const { user, error, isLoading } = useUser();
 
   return (
     <div>
@@ -30,20 +30,30 @@ export default function Gheader({ activePage }) {
           </Menu.Item>
         </Menu>
         <div style={{ float: "right", padding: "0 10px 0 10px" }}>
-          {loading ? (
+          {isLoading ? null : user ? (
+            <Button
+              href={`/user/${user.nickname}`}
+              style={{ marginRight: "10px" }}
+              icon={<UserOutlined />}
+            >
+              {user.nickname}
+            </Button>
+          ) : null}
+
+          {isLoading ? (
             <Button type="default" loading>
               Loading
             </Button>
           ) : (
             <Button
               type="default"
-              href={session ? "/api/auth/signout" : "/api/auth/signin"}
+              href={user ? "/api/auth/logout" : "/api/auth/login"}
               // @ts-ignore
-              danger={session}
-              icon={session ? <LogoutOutlined /> : <LoginOutlined />}
-              alt={session ? "Log out buton" : "Log in Button"}
+              danger={user}
+              icon={user ? <LogoutOutlined /> : <LoginOutlined />}
+              alt={user ? "Log out buton" : "Log in Button"}
             >
-              {session ? <>Log Out</> : <>Log In</>}
+              {user ? <>Log Out</> : <>Log In</>}
             </Button>
           )}
         </div>

@@ -120,8 +120,7 @@ dClient.on("message", async (message) => {
           // Ask if user has images to upload
           const fileQuestionEmbed = new Discord.MessageEmbed()
             .setColor("#db48cf")
-            .setTitle(`Files?`)
-            .setDescription(`
+            .setTitle(`Files?`).setDescription(`
             Do you have any files you would like to submit? Reply "yes" or "no"
 
             This will be anything discord can handle
@@ -184,8 +183,7 @@ dClient.on("message", async (message) => {
 
                   const submissionPreviewEmbed = new Discord.MessageEmbed()
                     .setColor("#db48cf")
-                    .setTitle(`Review Submission`)
-                    .setDescription(`
+                    .setTitle(`Review Submission`).setDescription(`
                     Does your submission look good? Reply "yes" or "no"
 
                     **Description:** ${previewSubmission.description}

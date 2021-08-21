@@ -7,6 +7,7 @@ export type User = {
   isAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
+  submissions?: Submission[];
 };
 
 export type Submission = {
@@ -25,6 +26,21 @@ export type Submission = {
   user_profile: User | null;
   images: string[];
   files: string[];
+  uploaded_files: File[];
+};
+
+export type FrontendSubmission = {
+  id: number;
+  description: string;
+  user_profile: {
+    id: string;
+    username: string;
+    user_pic: string;
+  };
+  gauntlet_week;
+  images: File[];
+  files: File[];
+  uploaded_files: File[];
 };
 
 export type WeekApiResponse = {
@@ -46,4 +62,14 @@ export type SubmissionResponse = {
   isAdmin: boolean;
   show_button: boolean;
   show_sub: boolean;
+};
+
+export type File = {
+  url: string;
+  filename?: string;
+  type?: string;
+  etag?: string;
+  key?: string;
+  user_id: string;
+  submissionsId?: number;
 };

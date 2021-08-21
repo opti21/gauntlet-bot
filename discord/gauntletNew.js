@@ -98,105 +98,108 @@ dClient.on("message", async (message) => {
 
   if (command === "gauntlet" || command === "g") {
     console.log(parseInt(message.author.id));
+    message.reply(
+      "Submissions are now handled at: https://gauntletbot.xyz just sign in with your discord login by clicking the login button on the top right, then clicking the submit tab at the top"
+    );
 
-    const userExists = await prisma.users.findFirst({
-      where: { id: message.author.id },
-    });
+    // const userExists = await prisma.users.findFirst({
+    //   where: { id: message.author.id },
+    // });
 
-    if (!userExists) {
-      await prisma.users
-        .create({
-          data: {
-            id: message.author.id,
-            user_pic: message.author.avatarURL({
-              format: "png",
-              dynamic: true,
-            }),
-            username: message.author.username,
-          },
-        })
-        .then((response) => {
-          console.log("User Created");
-          console.log(response);
-        })
-        .catch((e) => {
-          console.error(e);
-        });
-    } else {
-      await prisma.users.update({
-        where: { id: userExists.id },
-        data: {
-          user_pic: message.author.avatarURL({
-            format: "png",
-            dynamic: true,
-          }),
-        },
-      });
-    }
+    // if (!userExists) {
+    //   await prisma.users
+    //     .create({
+    //       data: {
+    //         id: message.author.id,
+    //         user_pic: message.author.avatarURL({
+    //           format: "png",
+    //           dynamic: true,
+    //         }),
+    //         username: message.author.username,
+    //       },
+    //     })
+    //     .then((response) => {
+    //       console.log("User Created");
+    //       console.log(response);
+    //     })
+    //     .catch((e) => {
+    //       console.error(e);
+    //     });
+    // } else {
+    //   await prisma.users.update({
+    //     where: { id: userExists.id },
+    //     data: {
+    //       user_pic: message.author.avatarURL({
+    //         format: "png",
+    //         dynamic: true,
+    //       }),
+    //     },
+    //   });
+    // }
 
-    console.log(userExists);
+    // console.log(userExists);
 
-    let userSubmissions = await prisma.submissions.findMany({
-      where: { user: message.author.id },
-    });
-    console.log(userSubmissions);
+    // let userSubmissions = await prisma.submissions.findMany({
+    //   where: { user: message.author.id },
+    // });
+    // console.log(userSubmissions);
 
-    if (userSubmissions.length === 0) {
-      // User does not have exisiting submissions
-      message.author.createDM().then((dmChannel) => {
-        const submitCommandResponse = new Discord.MessageEmbed()
-          .setColor("#db48cf")
-          .setTitle(`Hi There!`).setDescription(`
-          Would you like to make a new submission?
-          Reply yes or no
-          `);
-        dmChannel.send(submitCommandResponse);
+    // if (userSubmissions.length === 0) {
+    //   // User does not have exisiting submissions
+    //   message.author.createDM().then((dmChannel) => {
+    //     const submitCommandResponse = new Discord.MessageEmbed()
+    //       .setColor("#db48cf")
+    //       .setTitle(`Hi There!`).setDescription(`
+    //       Would you like to make a new submission?
+    //       Reply yes or no
+    //       `);
+    //     dmChannel.send(submitCommandResponse);
 
-        const filter = (m) => m.author.id === dmChannel.recipient.id;
-        const responseCollector = new Discord.MessageCollector(
-          dmChannel,
-          filter
-        );
+    //     const filter = (m) => m.author.id === dmChannel.recipient.id;
+    //     const responseCollector = new Discord.MessageCollector(
+    //       dmChannel,
+    //       filter
+    //     );
 
-        responseCollector.on("collect", async (responseAnswer) => {
-          if (responseAnswer.content.toLowerCase() === "yes") {
-            const activeWeek = await prisma.gauntlet_weeks.findFirst({
-              where: { active: true },
-            });
-            if (activeWeek.accepting_submissions) {
-              submissionFuncs.newSubmissionStart(dmChannel, dClient);
-            } else {
-              const submissionsClosedEmbed = new Discord.MessageEmbed()
-                .setColor("#ff0000")
-                .setTitle("Submissions Closed").setDescription(`
-                Unfortunately submissions for this week are closed
-                `);
+    //     responseCollector.on("collect", async (responseAnswer) => {
+    //       if (responseAnswer.content.toLowerCase() === "yes") {
+    //         const activeWeek = await prisma.gauntlet_weeks.findFirst({
+    //           where: { active: true },
+    //         });
+    //         if (activeWeek.accepting_submissions) {
+    //           submissionFuncs.newSubmissionStart(dmChannel, dClient);
+    //         } else {
+    //           const submissionsClosedEmbed = new Discord.MessageEmbed()
+    //             .setColor("#ff0000")
+    //             .setTitle("Submissions Closed").setDescription(`
+    //             Unfortunately submissions for this week are closed
+    //             `);
 
-              dmChannel.send(submissionsClosedEmbed);
-            }
-            responseCollector.stop();
-          } else if (responseAnswer.content.toLowerCase() === "no") {
-            message.reply("Alright, have a good day!");
-            responseCollector.stop();
-          } else {
-            responseAnswer
-              .reply(`Please reply with "yes" or "no"`)
-              .then((m) => {
-                m.delete({ timeout: 5000 });
-              });
-          }
-        });
+    //           dmChannel.send(submissionsClosedEmbed);
+    //         }
+    //         responseCollector.stop();
+    //       } else if (responseAnswer.content.toLowerCase() === "no") {
+    //         message.reply("Alright, have a good day!");
+    //         responseCollector.stop();
+    //       } else {
+    //         responseAnswer
+    //           .reply(`Please reply with "yes" or "no"`)
+    //           .then((m) => {
+    //             m.delete({ timeout: 5000 });
+    //           });
+    //       }
+    //     });
 
-        responseCollector.on("end", (collected) => {
-          console.log(`Review collector stopped`);
-        });
-      });
-    } else {
-      // User has exisiting submissions
-      message.author.createDM().then((dmChannel) => {
-        submissionFuncs.returningUserMenu(dmChannel, dClient);
-      });
-    }
+    //     responseCollector.on("end", (collected) => {
+    //       console.log(`Review collector stopped`);
+    //     });
+    //   });
+    // } else {
+    //   // User has exisiting submissions
+    //   message.author.createDM().then((dmChannel) => {
+    //     submissionFuncs.returningUserMenu(dmChannel, dClient);
+    //   });
+    // }
   }
 
   if (command === "week") {

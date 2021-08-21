@@ -14,9 +14,9 @@ model gauntlet_weeks {
   theme                 String?       @db.VarChar
   description           String?       @db.VarChar
   editing               Boolean?
-  submissions           submissions[]
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
+  submissions           submissions[]
 }
 
 model submissions {
@@ -29,13 +29,14 @@ model submissions {
   id                    Int            @id @default(autoincrement())
   gauntlet_week         Int
   attachments           String[]       @db.VarChar
-  files                 String[]       @db.VarChar
-  images                String[]       @db.VarChar
   user                  String
-  gauntlet_weeks        gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
-  user_profile          users?         @relation(fields: [user], references: [id])
+  files                 String[]       @db.VarChar
+  images                String[]       @db.VarChar
+  gauntlet_weeks        gauntlet_weeks @relation(fields: [gauntlet_week], references: [week])
+  user_profile          users          @relation(fields: [user], references: [id])
+  uploaded_files        files[]
 }
 
 model users {
@@ -44,10 +45,23 @@ model users {
   username          String?       @db.VarChar
   twitch_username   String?       @db.VarChar
   currently_editing Int?
-  isAdmin           Boolean       @default(false)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+  isAdmin           Boolean       @default(false)
+  files             files[]
   submissions       submissions[]
+}
+
+model files {
+  id            Int          @id @default(autoincrement())
+  filename      String
+  url           String
+  user_id       String
+  submissionsId Int?
+  etag          String
+  type          String
+  submissions   submissions? @relation(fields: [submissionsId], references: [id])
+  user          users        @relation(fields: [user_id], references: [id])
 }
 
 model admins {
@@ -57,7 +71,7 @@ model admins {
 }
 
 model twitch_creds {
-  id             Int     @id @default(autoincrement())
-  access_token   String
-  expires_in     Int
+  id           Int    @id @default(autoincrement())
+  access_token String
+  expires_in   Int
 }

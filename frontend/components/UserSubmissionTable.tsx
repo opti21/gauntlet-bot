@@ -1,7 +1,9 @@
 import { Avatar, Skeleton, Table, Tag } from "antd";
 import Link from "next/link";
+import { Submission } from "../types";
+import * as removeMd from "remove-markdown";
 
-export default function CurrentWeekTable({ data }) {
+export default function UserSubmissionTable({ data }: { data: Submission[] }) {
   console.log(data);
   if (!data) return <Skeleton active />;
 
@@ -16,20 +18,20 @@ export default function CurrentWeekTable({ data }) {
 
   const columns = [
     {
-      title: "User",
-      dataIndex: "username",
-      key: "username",
+      title: "Week",
+      dataIndex: "week",
+      key: "week",
       render: (text, record) => (
-        <div style={{ verticalAlign: "middle" }}>
-          <Avatar
-            src={record.user_profile.user_pic}
-            style={{ float: "left" }}
-          />
-          <p style={{ float: "left", fontSize: "15px", marginLeft: "10px" }}>
-            {record.user_profile.username}
-          </p>
-        </div>
+        <p style={{ float: "left", fontSize: "15px", marginLeft: "10px" }}>
+          {record.gauntlet_week}
+        </p>
       ),
+    },
+    {
+      title: "Theme",
+      dataIndex: "theme",
+      key: "theme",
+      render: (text, record) => <p>{record.gauntlet_weeks.theme}</p>,
     },
     {
       title: "Reviewed?",
@@ -42,6 +44,16 @@ export default function CurrentWeekTable({ data }) {
           ) : (
             <Tag color={"red"}>Not Reviewed</Tag>
           )}
+        </>
+      ),
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      render: (text, record) => (
+        <>
+          <p>{removeMd(record.description.slice(0, 50)) + "..."}</p>
         </>
       ),
     },

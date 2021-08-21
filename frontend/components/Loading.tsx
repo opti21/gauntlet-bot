@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Loading() {
   return (
     <div
@@ -8,7 +10,7 @@ export default function Loading() {
         padding: "0px 0px 300px 0px",
       }}
     >
-      <img
+      <Image
         height="200px"
         width="200px"
         src="/gauntlet_loading.gif"
