@@ -22,7 +22,6 @@ export default withApiAuthRequired(async function submissionStatus(
   res: NextApiResponse
 ) {
   const session = await getSession(req, res);
-  // console.log(session);
   //@ts-ignore
   const { user, week }: { user: string; week: string } = req.query;
 

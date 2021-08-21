@@ -11,21 +11,15 @@ import Loading from "../components/Loading";
 
 export default function Current() {
   const { data, error } = useSWR<WeekApiResponse>("/api/current-week");
-  console.log(data);
 
   const notReviewed = data ? data.not_reviewed : [];
   const reviewed = data ? data.reviewed : [];
   const notReviewedNum = data ? data.not_reviewed.length : 0;
   const reviewedNum = data ? data.reviewed_num : 0;
-  console.log(reviewedNum);
 
   const h2Style = {
     textShadow: "2px 2px 13px #000000",
   };
-
-  // console.log(notReviewed);
-
-  // return <>test</>;
 
   return (
     <>

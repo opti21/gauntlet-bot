@@ -16,7 +16,6 @@ export default withApiAuthRequired(async function UploadFile(
     const { user } = getSession(req, res);
     checkUser(user);
 
-    console.log(user);
     const data = new Promise((resolve, reject) => {
       const form = new formidable.IncomingForm({
         multiple: true,
@@ -31,10 +30,6 @@ export default withApiAuthRequired(async function UploadFile(
 
     return data
       .then(async ({ fields, files }) => {
-        // console.log({ fields, files });
-        // console.log(files.files);
-        // throw new Error("Not implemented");
-
         try {
           const key = "gauntlet_" + uuid() + "_" + files.files.name;
 
@@ -47,12 +42,9 @@ export default withApiAuthRequired(async function UploadFile(
               ACL: "public-read",
             })
           );
-          console.log(upload);
           const etag = upload.ETag.slice(1, -1);
 
           const userID = user.sub.split("|")[2];
-          console.log("UserID");
-          console.log(userID);
           const createFile = await prisma.files
             .create({
               data: {
@@ -71,15 +63,13 @@ export default withApiAuthRequired(async function UploadFile(
               });
             });
 
-          console.log(createFile);
-
           if (createFile) {
             res.status(200).json({
               file_id: createFile.id,
             });
           }
         } catch (e) {
-          console.log(e);
+          console.error(e);
           res.status(500).send(e);
         }
       })

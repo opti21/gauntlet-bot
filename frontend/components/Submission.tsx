@@ -24,8 +24,6 @@ export default function SubmissionContent({
   isSubOwner,
   isAdmin,
 }: DataProp) {
-  console.log("sub comp");
-  console.log(submission.uploaded_files);
   return (
     <>
       <Row>
@@ -76,7 +74,6 @@ export default function SubmissionContent({
               <Card title="Images:" style={{ margin: "10px 10px 0px 0px" }}>
                 <Image.PreviewGroup>
                   {images.map((image, index) => {
-                    console.log("is image");
                     return (
                       <div
                         key={index + 1}

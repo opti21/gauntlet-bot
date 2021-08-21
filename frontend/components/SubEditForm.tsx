@@ -46,7 +46,8 @@ export default function SubEditForm({ submission }) {
             toast.success("File deleted 🗑️");
             return true;
           } else {
-            console.log(res);
+            toast.error("Error deleting file");
+            console.error(res);
             return false;
           }
         });
@@ -71,7 +72,6 @@ export default function SubEditForm({ submission }) {
           console.error(res.error);
         }
       });
-    console.log(values);
   };
 
   const tdStyle: CSSProperties = {
@@ -126,7 +126,6 @@ export default function SubEditForm({ submission }) {
                     onChange={(getValue) => {
                       const value = getValue();
                       setFieldValue("description", value);
-                      // console.log(getValue());
                     }}
                     autoFocus={true}
                     disableExtensions={["container_notice"]}
@@ -163,20 +162,17 @@ export default function SubEditForm({ submission }) {
                           ...field.value,
                           info.file.response.file_id,
                         ]);
-                        console.log(info.file);
                       }
 
                       if (status === "error") {
                         toast.error("Error uploading file 😬");
                         console.error(response.error);
                       }
-                      console.log(status);
                     }}
                     style={{
                       marginTop: "20px",
                     }}
                     onRemove={async (file) => {
-                      console.log(file);
                       fetch("/api/files/delete", {
                         method: "DELETE",
                         headers: {
@@ -187,14 +183,16 @@ export default function SubEditForm({ submission }) {
                         }),
                       }).then((res) => {
                         if (res.status === 200) {
+                          toast.success("File removed");
                           const removeFileFromArray = field.value.filter(
                             (file) => file.name !== file.name
                           );
-                          console.log(removeFileFromArray);
                           setFieldValue("files", removeFileFromArray);
+
                           return true;
                         } else {
-                          console.log(res);
+                          toast.error("Error removing file");
+                          console.error(res);
                           return false;
                         }
                       });

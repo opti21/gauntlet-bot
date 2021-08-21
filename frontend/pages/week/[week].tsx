@@ -23,14 +23,9 @@ export default function Week() {
   const { data, error } = useSWR<WeekApiResponse>(
     week ? `/api/week?week_num=${week}` : null
   );
-  console.log(data);
 
   const notReviewed = data?.not_reviewed;
   const reviewed = data?.reviewed;
-
-  // console.log(notReviewed);
-
-  // return <>test</>;
 
   return (
     <>

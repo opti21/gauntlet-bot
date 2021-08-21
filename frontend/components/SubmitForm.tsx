@@ -32,7 +32,6 @@ export default function SubmitForm({ user }) {
       .catch((err) => {
         console.error(err);
       });
-    console.log(values);
   };
 
   return (
@@ -73,7 +72,6 @@ export default function SubmitForm({ user }) {
                     onChange={(getValue) => {
                       const value = getValue();
                       setFieldValue("description", value);
-                      // console.log(getValue());
                     }}
                     autoFocus={true}
                     disableExtensions={["container_notice"]}
@@ -105,15 +103,12 @@ export default function SubmitForm({ user }) {
                           ...field.value,
                           info.file.response.file_id,
                         ]);
-                        console.log(info.file);
                       }
-                      console.log(status);
                     }}
                     style={{
                       marginTop: "20px",
                     }}
                     onRemove={async (file) => {
-                      console.log(file);
                       fetch("/api/files/delete", {
                         method: "DELETE",
                         headers: {
@@ -124,14 +119,15 @@ export default function SubmitForm({ user }) {
                         }),
                       }).then((res) => {
                         if (res.status === 200) {
+                          toast.success("File uploaded");
                           const removeFileFromArray = field.value.filter(
                             (file) => file.name !== file.name
                           );
-                          console.log(removeFileFromArray);
                           setFieldValue("files", removeFileFromArray);
                           return true;
                         } else {
-                          console.log(res);
+                          toast.error("Error uploading file");
+                          console.error(res);
                           return false;
                         }
                       });

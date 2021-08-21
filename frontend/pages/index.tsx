@@ -19,10 +19,6 @@ export default function Current() {
     textShadow: "2px 2px 13px #000000",
   };
 
-  // console.log(notReviewed);
-
-  // return <>test</>;
-
   return (
     <>
       <Head>
