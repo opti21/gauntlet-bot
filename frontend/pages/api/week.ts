@@ -6,7 +6,6 @@ const week = async (req, res: NextApiResponse) => {
   const activeWeek = await prisma.gauntlet_weeks.findFirst({
     where: { week: parseInt(week_num) },
   });
-  console.log(activeWeek);
   const notReviewed = await prisma.submissions.findMany({
     where: { gauntlet_week: activeWeek.week, reviewed: false },
     include: {
@@ -34,7 +33,6 @@ const week = async (req, res: NextApiResponse) => {
   const total = notReviewed.length + reviewed.length;
   const reviewed_num = reviewed.length;
   const reviewedPercentage = Math.floor((reviewed_num / total) * 100);
-  console.log(total);
 
   res.json({
     week_info: {

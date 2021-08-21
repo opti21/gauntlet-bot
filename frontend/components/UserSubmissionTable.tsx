@@ -4,7 +4,6 @@ import { Submission } from "../types";
 import * as removeMd from "remove-markdown";
 
 export default function UserSubmissionTable({ data }: { data: Submission[] }) {
-  console.log(data);
   if (!data) return <Skeleton active />;
 
   const tableData = data.map((sub, index) => {

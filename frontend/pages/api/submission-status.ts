@@ -18,7 +18,6 @@ export default withApiAuthRequired(async function submissionStatus(
         console.error(err);
         res.status(500).json({ success: false, error: err });
       });
-    console.log(currentWeek);
 
     if (currentWeek) {
       const userSubmission = await prisma.submissions
@@ -34,14 +33,13 @@ export default withApiAuthRequired(async function submissionStatus(
         });
       if (userSubmission) {
         if (userSubmission.length > 0) {
-          console.log("has submission");
           res.status(200).json({ success: true, already_submitted: true });
         } else {
           res.status(200).json({ success: true, already_submitted: false });
         }
       }
     } else {
-      console.log("no active week found");
+      console.error("no active week found");
       res.status(500).json({ success: false, error: "No active week found" });
     }
   } catch (e) {

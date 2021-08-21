@@ -27,7 +27,6 @@ export default withApiAuthRequired(async function submitApi(
 ) {
   const { user } = getSession(req, res);
   checkUser(user);
-  console.log(req.body.files);
 
   const formSchema = yup.object().shape({
     description: yup.string().required(),
@@ -37,8 +36,6 @@ export default withApiAuthRequired(async function submitApi(
   const isValid = formSchema.validate(req.body).catch((err) => {
     res.status(400).json({ success: false, error: err });
   });
-
-  console.log(req.body);
 
   if (req.method === "POST") {
     if (isValid) {
@@ -100,6 +97,28 @@ export default withApiAuthRequired(async function submitApi(
             });
 
           if (createSubmission) {
+            await fetch(process.env.SUBMISSION_WEBHOOK, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                embeds: [
+                  {
+                    type: "rich",
+                    color: 14371023,
+                    title: `${user.nickname} uploaded a submission check it out!`,
+                    description: `${process.env.APP_URL}/review?submission=${createSubmission.id}`,
+                  },
+                ],
+              }),
+            })
+              .then((res) => {
+                console.log("WEBHOOK POSTED");
+              })
+              .catch((e) => {
+                console.error(e);
+              });
             res
               .status(200)
               .json({ success: true, sub_id: createSubmission.id });

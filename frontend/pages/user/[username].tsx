@@ -35,15 +35,14 @@ export default function UserPage() {
     username ? `/api/get-user?user=${username}` : null
   );
 
-  // console.log(user);
-  console.log(userData);
-
-  // console.log(isPageOwner);
-
   return (
     <>
       <Head>
-        {/* <title>Gauntlet Bot - {userData?.userInfo.username}</title> */}
+        {userData ? (
+          <title>Gauntlet Bot - {userData?.userInfo.username}</title>
+        ) : (
+          <title>Gauntlet Bot</title>
+        )}
       </Head>
       <Layout className="layout bg">
         <Gheader activePage={"-1"} />

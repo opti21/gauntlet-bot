@@ -22,7 +22,6 @@ export default withPageAuthRequired(function Edit() {
   const { data: submissionData, error: submissionError } = useSWR(
     user ? `/api/submissions?subID=${subID}` : null
   );
-  console.log(submissionData);
 
   return (
     <>

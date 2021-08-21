@@ -17,7 +17,6 @@ export default withApiAuthRequired(async function DeleteSubmissionApi(
 ) {
   if (req.method === "DELETE") {
     const { subID } = req.query;
-    console.log(subID);
     const session = getSession(req, res);
 
     const submission = await prisma.submissions.findFirst({
@@ -39,7 +38,6 @@ export default withApiAuthRequired(async function DeleteSubmissionApi(
             console.error(err);
             res.status(500).json({ success: false, error: "s3 error" });
           });
-        console.log(s3DeleteResponse);
 
         const prismaFileDeleteRes = await prisma.files
           .deleteMany({
@@ -51,7 +49,6 @@ export default withApiAuthRequired(async function DeleteSubmissionApi(
             console.error(err);
             res.status(500).json({ success: false, error: "prisma error" });
           });
-        console.log(prismaFileDeleteRes);
       });
 
       await prisma.submissions

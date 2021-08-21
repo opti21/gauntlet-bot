@@ -16,7 +16,6 @@ export default withApiAuthRequired(async function submitApi(
   if (req.method === "PUT") {
     const { subID } = req.query;
     if (subID) {
-      console.log(req.body);
       const formSchema = yup.object().shape({
         description: yup.string().required(),
         files: yup.array().of(yup.number()),
@@ -50,15 +49,12 @@ export default withApiAuthRequired(async function submitApi(
               message: "Prisma couldn't update submission",
             });
           });
-        console.log(updateResponse);
         if (updateResponse) {
-          res
-            .status(200)
-            .json({
-              success: true,
-              sub_id: updateResponse.id,
-              message: "submission updated",
-            });
+          res.status(200).json({
+            success: true,
+            sub_id: updateResponse.id,
+            message: "submission updated",
+          });
         }
       }
     } else {

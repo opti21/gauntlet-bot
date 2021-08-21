@@ -30,13 +30,11 @@ export default function Review() {
   const { data, error } = useSWR(
     subID ? `/api/submissions?subID=${subID}` : null
   );
-  console.log(data);
 
   const startReview = async () => {
     const response = await fetch(
       `/api/start-review?user=${data?.submission.user_profile.id}&week=${data?.submission.gauntlet_week}`
     ).then((r) => r.json());
-    console.log(response);
     if (!response.error) {
       mutate(`/api/submissions?subID=${subID}`);
     } else {
@@ -135,110 +133,3 @@ export default function Review() {
     </>
   );
 }
-
-// export const getServerSideProps: GetServerSideProps = async ({
-//   req,
-//   res,
-//   query,
-// }) => {
-//   const session = getSession(req, res);
-//   let isAdmin = false;
-//   let isSubOwner = false;
-//   if (session) {
-//     const adminResponse = await prisma.admins.findFirst({
-//       where: {
-//         discord_id: session.user.sub.split("|")[2],
-//       },
-//     });
-//     if (adminResponse) isAdmin = true;
-//   }
-
-//   const { submission: subID } = query;
-
-//   if (subID) {
-//     const submission = await prisma.submissions.findFirst({
-//       where: {
-//         // @ts-ignore
-//         id: parseInt(subID),
-//       },
-//       include: {
-//         user_profile: true,
-//         uploaded_files: true,
-//       },
-//     });
-//     console.log(submission);
-
-//     if (submission && session) {
-//       // Checks if logged in user is the ownwer of the requested submission
-//       if (submission.user_profile.id === session.user.sub.split("|")[2]) {
-//         isSubOwner = true;
-//       }
-//     }
-
-//     // console.log(submission);
-//     let showReviewButton: Boolean = false;
-//     let showSubInit: Boolean = false;
-//     let images = [];
-//     let files = [];
-//     let subExists = false;
-
-//     if (submission) {
-//       subExists = true;
-//       if (submission.reviewed === false) {
-//         showReviewButton = true;
-//       } else {
-//         showSubInit = true;
-//       }
-
-//       // console.time("submission_file_parse");
-//       submission.images.forEach((imageStr, index) => {
-//         const image = JSON.parse(imageStr);
-//         images.push(image);
-//       });
-
-//       submission.files.forEach((fileStr, index) => {
-//         const file = JSON.parse(fileStr);
-//         files.push(file);
-//       });
-
-//       submission.uploaded_files.forEach((file, index) => {
-//         if (file.type.includes("image")) {
-//           images.push(file);
-//         } else {
-//           files.push(file);
-//         }
-//       });
-
-//       // console.timeEnd("submission_file_parse");
-//     }
-
-//     let subData = null;
-
-//     if (subExists) {
-//       subData = {
-//         id: submission.id,
-//         description: submission.description,
-//         user_profile: {
-//           id: submission.user_profile.id,
-//           username: submission.user_profile.username,
-//           user_pic: submission.user_profile.user_pic,
-//         },
-//         gauntlet_week: submission?.gauntlet_week,
-//         images,
-//         files,
-//       };
-//     }
-
-//     return {
-//       props: {
-//         isAdmin,
-//         isSubOwner,
-//         subExists,
-//         submission: subData,
-//         showReviewButton,
-//         showSubInit,
-//         subID,
-//       },
-//     };
-//   }
-// };

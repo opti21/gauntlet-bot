@@ -2,7 +2,6 @@ import { Avatar, Skeleton, Table, Tag } from "antd";
 import Link from "next/link";
 
 export default function CurrentWeekTable({ data }) {
-  console.log(data);
   if (!data) return <Skeleton active />;
 
   const tableData = data.map((sub, index) => {

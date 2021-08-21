@@ -12,8 +12,6 @@ export default withApiAuthRequired(async function deleteAPI(
     const session = getSession(req, res);
     const userID = session.user.sub.split("|")[2];
     const file = req.body.file;
-    console.log("file body");
-    console.log(req.body);
     try {
       const userFile = await prisma.files.findFirst({
         where: {
@@ -50,8 +48,6 @@ export default withApiAuthRequired(async function deleteAPI(
               console.error(e);
             });
 
-          console.log(deteleDbFile);
-          console.log(deleteResponse);
           res.status(200).json({ success: true, message: "File deleted" });
         } else {
           res

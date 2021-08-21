@@ -4,8 +4,6 @@ import { Submission, File } from "../../../types";
 import { getSession } from "@auth0/nextjs-auth0";
 
 const submission = async (req, res: NextApiResponse) => {
-  // const { user } = getSession(req, res);
-  // console.log(user);
   if (req.method === "GET") {
     const { subID }: { subID: string } = req.query;
     const session = getSession(req, res);
@@ -30,7 +28,6 @@ const submission = async (req, res: NextApiResponse) => {
       },
     });
 
-    // console.log(submission);
     let showButton: Boolean = false;
     let showSub: Boolean = false;
     let images: File[] = [];
