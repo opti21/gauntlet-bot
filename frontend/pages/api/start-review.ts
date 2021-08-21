@@ -1,14 +1,13 @@
-require("dotenv").config();
 const axios = require("axios").default;
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import duration from "dayjs/plugin/duration";
 dayjs.extend(utc);
 dayjs.extend(duration);
-import { getSession } from "next-auth/client";
 import prisma from "../../util/prisma";
-import { NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 import { submissions } from "@prisma/client";
+import { getSession, withApiAuthRequired } from "@auth0/nextjs-auth0";
 
 let DISCORD_WEBHOOK: string;
 
@@ -18,77 +17,77 @@ if (process.env.NODE_ENV === "development") {
   DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 }
 
-const startReview = async (req, res: NextApiResponse) => {
-  const session = await getSession({ req });
-  // console.log(session)
+export default withApiAuthRequired(async function submissionStatus(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const session = await getSession(req, res);
+  // console.log(session);
+  //@ts-ignore
   const { user, week }: { user: string; week: string } = req.query;
 
-  if (session) {
-    const submission = await prisma.submissions
-      .findFirst({
-        where: {
-          user: user,
-          gauntlet_week: parseInt(week),
-        },
-      })
-      .catch((e) => {
-        console.error(e);
-        res.status(500).json({
-          error: e,
-        });
+  const submission = await prisma.submissions
+    .findFirst({
+      where: {
+        user: user,
+        gauntlet_week: parseInt(week),
+      },
+    })
+    .catch((e) => {
+      console.error(e);
+      res.status(500).json({
+        error: e,
       });
+    });
 
-    if (submission) {
-      if (submission.reviewed) {
-        res.status(400).json({
-          error: "Review already started",
+  if (submission) {
+    if (submission.reviewed) {
+      res.status(400).json({
+        error: "Review already started",
+      });
+    } else {
+      const isAdmin = await prisma.admins
+        .findFirst({
+          where: {
+            discord_id: session.user.sub.split("|")[2],
+          },
+        })
+        .catch((e) => {
+          console.error(e);
+          res.status(500).json({
+            error: e,
+          });
         });
-      } else {
-        const isAdmin = await prisma.admins
-          .findFirst({
+
+      if (isAdmin) {
+        await prisma.submissions
+          .update({
             where: {
-              twitch_username: session.user.name,
+              id: submission.id,
+            },
+            data: {
+              reviewed: true,
             },
           })
-          .catch((e) => {
-            console.error(e);
-            res.status(500).json({
-              error: e,
+          .then((response) => {
+            res.status(200).json({
+              review_started: true,
             });
           });
 
-        if (isAdmin) {
-          await prisma.submissions
-            .update({
-              where: {
-                id: submission.id,
-              },
-              data: {
-                reviewed: true,
-              },
-            })
-            .then((response) => {
-              res.status(200).json({
-                review_started: true,
-              });
-            });
-
-          // generateVodLink(submission)
-        } else {
-          res.status(401).json({
-            error: "Unathorized",
-          });
-        }
+        generateVodLink(submission);
+      } else {
+        res.status(401).json({
+          error: "Unathorized",
+        });
       }
-    } else {
-      res.status(400).json({
-        error: "Submision doesn't exist",
-      });
     }
   } else {
-    res.status(401).json({ error: "Unathorized" });
+    res.status(400).json({
+      error: "Submision doesn't exist",
+    });
   }
-};
+});
 
 const generateVodLink = async (submission: submissions) => {
   const token_db = await prisma.twitch_creds
@@ -213,5 +212,3 @@ const generateVodLink = async (submission: submissions) => {
       console.error(e);
     });
 };
-
-export default startReview;

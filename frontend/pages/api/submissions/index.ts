@@ -1,6 +1,6 @@
 import prisma from "../../../util/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
-import { Submission } from "../../../types";
+import { Submission, File } from "../../../types";
 import { getSession } from "@auth0/nextjs-auth0";
 
 const submission = async (req, res: NextApiResponse) => {
@@ -8,7 +8,17 @@ const submission = async (req, res: NextApiResponse) => {
   // console.log(user);
   if (req.method === "GET") {
     const { subID }: { subID: string } = req.query;
-    console.log(req.query);
+    const session = getSession(req, res);
+    let isAdmin = false;
+    let isSubOwner = false;
+    if (session) {
+      const adminResponse = await prisma.admins.findFirst({
+        where: {
+          discord_id: session.user.sub.split("|")[2],
+        },
+      });
+      if (adminResponse) isAdmin = true;
+    }
 
     const submission: Submission = await prisma.submissions.findFirst({
       where: {
@@ -16,16 +26,23 @@ const submission = async (req, res: NextApiResponse) => {
       },
       include: {
         user_profile: true,
+        uploaded_files: true,
       },
     });
 
     // console.log(submission);
     let showButton: Boolean = false;
     let showSub: Boolean = false;
-    let images: String[] = [];
+    let images: File[] = [];
     let files: File[] = [];
 
     if (submission) {
+      // Check if user is sub owner
+      if (session) {
+        if (session.user.sub.split("|")[2] === submission.user) {
+          isSubOwner = true;
+        }
+      }
       if (submission.reviewed === false) {
         showButton = true;
       } else {
@@ -35,22 +52,20 @@ const submission = async (req, res: NextApiResponse) => {
       // console.time("submission_file_parse");
       submission.images.forEach((imageStr, index) => {
         const image = JSON.parse(imageStr);
-        const imageObj = {
-          key: index + 1,
-          ...image,
-        };
-
-        images.push(imageObj);
+        images.push(image);
       });
 
       submission.files.forEach((fileStr, index) => {
         const file = JSON.parse(fileStr);
-        const fileObj = {
-          key: index + 1,
-          ...file,
-        };
+        files.push(file);
+      });
 
-        files.push(fileObj);
+      submission.uploaded_files.forEach((file, index) => {
+        if (file.type.includes("image")) {
+          images.push(file);
+        } else {
+          files.push(file);
+        }
       });
       // console.timeEnd("submission_file_parse");
     }
@@ -61,6 +76,8 @@ const submission = async (req, res: NextApiResponse) => {
       files: files,
       show_button: showButton,
       show_sub: showSub,
+      is_admin: isAdmin,
+      is_sub_owner: isSubOwner,
     });
   } else {
     res.status(405).json({ success: false, error: "Method not allowed" });

@@ -4,9 +4,19 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { v4 as uuid } from "uuid";
 import * as fs from "fs";
 import s3 from "../../../util/S3Client";
+import { getSession, withApiAuthRequired } from "@auth0/nextjs-auth0";
+import prisma from "../../../util/prisma";
+import checkUser from "../../../util/checkUser";
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+export default withApiAuthRequired(async function UploadFile(
+  req,
+  res: NextApiResponse
+) {
   if (req.method === "POST") {
+    const { user } = getSession(req, res);
+    checkUser(user);
+
+    console.log(user);
     const data = new Promise((resolve, reject) => {
       const form = new formidable.IncomingForm({
         multiple: true,
@@ -38,15 +48,36 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             })
           );
           console.log(upload);
-          const regex = /^"(.*)"$/;
-          const etag = regex.exec(upload.ETag)[1];
+          const etag = upload.ETag.slice(1, -1);
 
-          res.status(200).json({
-            etag,
-            key,
-            url: `https://s3.${process.env.S3_REGION}.wasabisys.com/${process.env.S3_BUCKET}/${key}`,
-            type: files.files.type,
-          });
+          const userID = user.sub.split("|")[2];
+          console.log("UserID");
+          console.log(userID);
+          const createFile = await prisma.files
+            .create({
+              data: {
+                etag: etag,
+                url: `https://s3.${process.env.S3_REGION}.wasabisys.com/${process.env.S3_BUCKET}/${key}`,
+                filename: key,
+                user_id: userID,
+                type: files.files.type,
+              },
+            })
+            .catch((err) => {
+              console.error(err);
+              res.status(500).json({
+                success: false,
+                error: "Prisma failed at making file",
+              });
+            });
+
+          console.log(createFile);
+
+          if (createFile) {
+            res.status(200).json({
+              file_id: createFile.id,
+            });
+          }
         } catch (e) {
           console.log(e);
           res.status(500).send(e);
@@ -56,8 +87,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         res.status(500).json(err);
         console.error(err);
       });
+  } else {
+    res.status(405).json({ success: false, error: "Method not allowed" });
   }
-};
+});
 
 export const config = {
   api: {

@@ -16,20 +16,10 @@ export default withApiAuthRequired(async function submitApi(
   if (req.method === "PUT") {
     const { subID } = req.query;
     if (subID) {
+      console.log(req.body);
       const formSchema = yup.object().shape({
         description: yup.string().required(),
-        files: yup.array().of(
-          yup
-            .object()
-            .shape({
-              etag: yup.string(),
-              key: yup.string(),
-              url: yup.string().url(),
-              type: yup.string(),
-            })
-            .default([])
-            .required()
-        ),
+        files: yup.array().of(yup.number()),
       });
 
       const isValid = formSchema.validate(req.body).catch((err) => {
@@ -37,17 +27,39 @@ export default withApiAuthRequired(async function submitApi(
         res.status(400).json({ success: false, error: "Validation Error" });
       });
       if (isValid) {
-        const updateResponse = await prisma.submissions.update({
-          where: {
-            id: parseInt(subID),
-          },
-          data: {
-            description: req.body.description,
-            files: req.body.files,
-          },
+        const idsForFiles = [];
+        req.body.files.forEach((file) => {
+          idsForFiles.push({ id: file });
         });
+        const updateResponse = await prisma.submissions
+          .update({
+            where: {
+              id: parseInt(subID),
+            },
+            data: {
+              description: req.body.description,
+              uploaded_files: {
+                connect: idsForFiles,
+              },
+            },
+          })
+          .catch((e) => {
+            console.error(e);
+            res.status(500).json({
+              success: false,
+              message: "Prisma couldn't update submission",
+            });
+          });
         console.log(updateResponse);
-        res.status(200).json({ success: true, message: "submission updated" });
+        if (updateResponse) {
+          res
+            .status(200)
+            .json({
+              success: true,
+              sub_id: updateResponse.id,
+              message: "submission updated",
+            });
+        }
       }
     } else {
       res.status(400).json({ success: false, error: "No subID provided" });

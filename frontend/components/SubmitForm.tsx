@@ -8,16 +8,9 @@ import * as yup from "yup";
 import { toast } from "react-toastify";
 
 export default function SubmitForm({ user }) {
-  console.log(user);
   const formSchema = yup.object().shape({
     description: yup.string().required(),
-    files: yup.array().of(
-      yup.object().shape({
-        etag: yup.string(),
-        key: yup.string(),
-        url: yup.string(),
-      })
-    ),
+    files: yup.array().of(yup.number()),
   });
   const handleForm = async (values: any, setSubmitting: any) => {
     fetch("/api/submissions/submit", {
@@ -107,12 +100,10 @@ export default function SubmitForm({ user }) {
                     accept="image/*,.pdf"
                     onChange={(info) => {
                       const { status } = info.file;
-                      if (status === "uploading") {
-                      }
                       if (status === "done") {
                         setFieldValue("files", [
                           ...field.value,
-                          info.file.response,
+                          info.file.response.file_id,
                         ]);
                         console.log(info.file);
                       }

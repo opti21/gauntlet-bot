@@ -1,13 +1,17 @@
 ☐ Create README
 Frontend:
   next.js Next auth
-  ☐ finish adding user menu for submission owner
+  ✔ finish adding user menu for submission owner @done(21-08-12 14:31)
     - edit, delete buttons
-  ☐ Remake new index page
+  ✔ Remake new index page @done(21-08-12 14:30)
   ☐ fix submit API
+    ☐ create individual files on db
+    ☐ fix deletion of files on submit and edit pages
   ☐ fix previous week page
   ☐ fix inidividual previous week page
-  ☐ find better logic for error alerts on user page
+  ☐ Add moderating tools
+  ☐ Look for API to check images for NSFW content
+  ✔ find better logic for error alerts on user page @done(21-08-12 14:30)
   ✔ add user page @done(21-07-30 18:41)
   ✔ fix header to check for new auth0 session @started(21-07-24 20:15) @done(21-07-24 20:15) @lasted(48s)
   ✔ Let users be able to past submissions @done(21-04-21 00:23)
@@ -17,7 +21,6 @@ Frontend:
   ✔ Create Better index page @done(21-07-24 15:29)
   ✔ Add Submission status @done(21-07-24 15:29)
     Shows if they can still submit or not
-  ☐ Add moderating tools
   ✔ Add twitch Auth @done(21-03-12 02:34)
   ✔ Figure out how to get URIs to match for auth @done(21-03-12 19:33)
   ✔ Check that user's session is active when accessing api @done(21-03-15 21:33)

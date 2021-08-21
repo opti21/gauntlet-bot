@@ -2,7 +2,7 @@ import { Card, Avatar, Row, Col, Typography, Image, Button } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import Editor from "rich-markdown-editor";
-import { FrontendSubmission } from "../types";
+import { File, FrontendSubmission } from "../types";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import router from "next/router";
@@ -13,14 +13,19 @@ interface DataProp {
   submission: FrontendSubmission;
   isSubOwner: boolean;
   isAdmin: boolean;
+  images: File[];
+  files: File[];
 }
 
 export default function SubmissionContent({
   submission,
+  images,
+  files,
   isSubOwner,
   isAdmin,
 }: DataProp) {
-  console.log(submission);
+  console.log("sub comp");
+  console.log(submission.uploaded_files);
   return (
     <>
       <Row>
@@ -46,51 +51,6 @@ export default function SubmissionContent({
                   >
                     Edit
                   </Button>
-                  <Button
-                    onClick={(e) => {
-                      Swal.fire({
-                        title: "Are you sure?",
-                        text: "You will not be able to recover this Submission!",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonText: "Yes, delete it!",
-                        cancelButtonText: "No, keep it",
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          fetch("/api/submissions/delete", {
-                            method: "DELETE",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                              subID: submission.id,
-                            }),
-                          }).then((res) => {
-                            if (res.status === 200) {
-                              toast.success("Submission Deleted");
-                              router.push(
-                                `/user/${submission.user_profile.username}`
-                              );
-                            } else {
-                              toast.error(
-                                "Error deleting file 😬 let opti know if this keeps happening"
-                              );
-                              return false;
-                            }
-                          });
-                        } else if (
-                          result.dismiss === Swal.DismissReason.cancel
-                        ) {
-                          toast.info("Submission deletion cancelled");
-                        }
-                      });
-                    }}
-                    type="link"
-                    danger
-                    block
-                  >
-                    Delete Submission
-                  </Button>
                 </Card>
               </div>
             ) : null}
@@ -112,20 +72,22 @@ export default function SubmissionContent({
                 </Link>
               </div>
             </Card>
-            {submission.images.length > 0 ? (
+            {images.length > 0 ? (
               <Card title="Images:" style={{ margin: "10px 10px 0px 0px" }}>
                 <Image.PreviewGroup>
-                  {submission.images.map((image, index) => {
+                  {images.map((image, index) => {
                     console.log("is image");
                     return (
-                      <div key={index} style={{ margin: "5px", float: "left" }}>
+                      <div
+                        key={index + 1}
+                        style={{ margin: "5px", float: "left" }}
+                      >
                         <Image
                           width={75}
                           src="/preview.png"
                           preview={{
                             src: `${image.url}`,
                           }}
-                          alt={image.key}
                         />
                       </div>
                     );
@@ -135,7 +97,7 @@ export default function SubmissionContent({
             ) : (
               <></>
             )}
-            {submission.files.length > 0 ? (
+            {files.length > 0 ? (
               <Card
                 title="Files:"
                 style={{
@@ -145,10 +107,10 @@ export default function SubmissionContent({
                   textOverflow: "ellipsis",
                 }}
               >
-                {submission.files.map((file, index) => {
+                {files.map((file, index) => {
                   return (
                     <div key={index}>
-                      <a href={file.url} key={file.key}>
+                      <a href={file.url} key={index + 1} target="_blank">
                         {file.filename}
                       </a>
                     </div>

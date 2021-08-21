@@ -6,43 +6,53 @@ import { Formik, Form, Field } from "formik";
 import Editor from "rich-markdown-editor";
 import * as yup from "yup";
 import { toast } from "react-toastify";
+import { v4 as uuid } from "uuid";
 import Swal from "sweetalert2";
+import { CSSProperties, useState } from "react";
+import { mutate } from "swr";
 
 export default function SubEditForm({ submission }) {
   const formSchema = yup.object().shape({
     description: yup.string().required(),
-    files: yup.array().of(
-      yup.object().shape({
-        etag: yup.string(),
-        key: yup.string(),
-        url: yup.string(),
-      })
-    ),
+    files: yup.array().of(yup.number()),
   });
 
-  const uploadedFiles = [];
-  const mappedImages = submission.images.map((image) => {
-    const imageData = JSON.parse(image);
-    return {
-      name: imageData.key,
-      url: imageData.url,
-    };
-  });
-  const mappedFiles = submission.files.map((file) => {
-    const fileData = JSON.parse(file);
-    return {
-      name: fileData.key,
-      url: fileData.url,
-    };
-  });
-  mappedImages.forEach((image) => {
-    uploadedFiles.push(image);
-  });
-
-  mappedFiles.forEach((file) => {
-    uploadedFiles.push(file);
-  });
-  console.log(uploadedFiles);
+  const handleFileDeletion = (file) => {
+    Swal.fire({
+      title: "Are you sure you want to delete this file?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch("/api/files/delete", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file: {
+              response: {
+                file_id: file.id,
+              },
+            },
+          }),
+        }).then((res) => {
+          if (res.status === 200) {
+            mutate(`/api/submissions?subID=${submission.id}`);
+            toast.success("File deleted 🗑️");
+            return true;
+          } else {
+            console.log(res);
+            return false;
+          }
+        });
+      }
+    });
+  };
 
   const handleForm = async (values: any, setSubmitting: any) => {
     fetch(`/api/submissions/update?subID=${submission.id}`, {
@@ -55,7 +65,7 @@ export default function SubEditForm({ submission }) {
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          router.push("/");
+          router.push(`/review?submission=${res.sub_id}`);
         } else {
           toast.error("Error submitting form");
           console.error(res.error);
@@ -64,12 +74,18 @@ export default function SubEditForm({ submission }) {
     console.log(values);
   };
 
+  const tdStyle: CSSProperties = {
+    borderBottom: "1px solid #ddd",
+    padding: "20px",
+    textAlign: "center",
+  };
+
   return (
     <div>
       <Formik
         initialValues={{
           description: submission.description,
-          files: uploadedFiles,
+          files: [],
         }}
         validate={(values) => {
           const errors = {};
@@ -133,20 +149,26 @@ export default function SubEditForm({ submission }) {
                 meta,
               }) => (
                 <div style={{ paddingBottom: "20px" }}>
+                  <h2> Upload New files</h2>
                   <Dragger
                     name="files"
                     multiple={true}
-                    fileList={values.files}
-                    action="/api/files/upload"
+                    action={`/api/files/upload`}
                     accept="image/*,.pdf"
                     onChange={(info) => {
-                      const { status } = info.file;
+                      const { status, response } = info.file;
                       if (status === "done") {
+                        toast.success("File(s) uploaded 🤩");
                         setFieldValue("files", [
                           ...field.value,
-                          info.file.response,
+                          info.file.response.file_id,
                         ]);
                         console.log(info.file);
+                      }
+
+                      if (status === "error") {
+                        toast.error("Error uploading file 😬");
+                        console.error(response.error);
                       }
                       console.log(status);
                     }}
@@ -155,49 +177,25 @@ export default function SubEditForm({ submission }) {
                     }}
                     onRemove={async (file) => {
                       console.log(file);
-                      Swal.fire({
-                        title: "Are you sure?",
-                        text: "You will not be able to recover this imaginary file!",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonText: "Yes, delete it!",
-                        cancelButtonText: "No, keep it",
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          fetch("/api/files/delete", {
-                            method: "DELETE",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                              file: {
-                                response: {
-                                  key: file.name,
-                                },
-                              },
-                            }),
-                          }).then((res) => {
-                            if (res.status === 200) {
-                              const removeFileFromArray = values.files.filter(
-                                (currentFile) => {
-                                  return currentFile.name !== file.name;
-                                }
-                              );
-                              console.log(removeFileFromArray);
-                              setFieldValue("files", removeFileFromArray);
-                              toast.success("🗑️ The file has been deleted!");
-                              return true;
-                            } else {
-                              toast.error(
-                                "Error deleting file 😬 let opti know if this keeps happening"
-                              );
-                              return false;
-                            }
-                          });
-                        } else if (
-                          result.dismiss === Swal.DismissReason.cancel
-                        ) {
-                          toast.info("File deletion cancelled");
+                      fetch("/api/files/delete", {
+                        method: "DELETE",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          file: file,
+                        }),
+                      }).then((res) => {
+                        if (res.status === 200) {
+                          const removeFileFromArray = field.value.filter(
+                            (file) => file.name !== file.name
+                          );
+                          console.log(removeFileFromArray);
+                          setFieldValue("files", removeFileFromArray);
+                          return true;
+                        } else {
+                          console.log(res);
+                          return false;
                         }
                       });
                     }}
@@ -221,26 +219,141 @@ export default function SubEditForm({ submission }) {
               loading={isSubmitting}
               disabled={isSubmitting}
             >
-              Submit
+              Update
+            </Button>
+            <Button
+              onClick={(e) => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You will not be able to recover this Submission!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonText: "Yes, delete it!",
+                  cancelButtonText: "No, keep it",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    fetch(`/api/submissions/delete?subID=${submission.id}`, {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        subID: submission.id,
+                      }),
+                    }).then((res) => {
+                      if (res.status === 200) {
+                        toast.success("Submission Deleted");
+                        router.push(
+                          `/user/${submission.user_profile.username}`
+                        );
+                      } else {
+                        toast.error(
+                          "Error deleting submission 😬 let opti know if this keeps happening"
+                        );
+                        return false;
+                      }
+                    });
+                  } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    toast.info("Submission deletion cancelled");
+                  }
+                });
+              }}
+              type="link"
+              danger
+              block
+              style={{ width: "100px" }}
+            >
+              Delete Submission
             </Button>
           </Form>
         )}
       </Formik>
-      {/* <div
-        style={{
-          backgroundColor: "#181A1B",
-          padding: "20px",
-          marginBottom: "20px",
-        }}
-      >
-        {uploadedFiles.map((file, index) => {
-          return (
-            <a key={index + 1} href={`${file.url}`}>
-              {file.filename}
-            </a>
-          );
-        })}
-      </div> */}
+      {submission.uploaded_files.length > 0 ||
+      submission.images.length > 0 ||
+      submission.files.length > 0 ? (
+        <div
+          style={{
+            backgroundColor: "#181A1B",
+            padding: "20px",
+            marginBottom: "20px",
+          }}
+        >
+          <h2>Existing Files</h2>
+          <table
+            style={{
+              width: "100%",
+            }}
+          >
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {submission.uploaded_files.length > 0
+                ? submission.uploaded_files.map((file, index) => {
+                    const rowID = uuid().slice(0, 8);
+                    return (
+                      <tr key={rowID}>
+                        <td style={tdStyle}>
+                          <a href={`${file.url}`} target="_blank">
+                            {file.filename}
+                          </a>
+                        </td>
+                        <td style={tdStyle}>
+                          <Button
+                            onClick={() => handleFileDeletion(file)}
+                            type="default"
+                            danger
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                : null}
+              {submission.files.length > 0
+                ? submission.files.map((fileStr, index) => {
+                    const file = JSON.parse(fileStr);
+                    const rowID = uuid().slice(0, 8);
+                    return (
+                      <tr key={rowID}>
+                        <td style={tdStyle}>
+                          <a href={`${file.url}`} target="_blank">
+                            {file.filename}
+                          </a>
+                        </td>
+                        <td style={tdStyle}>
+                          <p>Unable to delete older files</p>
+                        </td>
+                      </tr>
+                    );
+                  })
+                : null}
+              {submission.images.length > 0
+                ? submission.images.map((imageStr, index) => {
+                    const file = JSON.parse(imageStr);
+                    const rowID = uuid().slice(0, 8);
+                    return (
+                      <tr key={rowID}>
+                        <td style={tdStyle}>
+                          <a href={`${file.url}`} target="_blank">
+                            {file.filename}
+                          </a>
+                        </td>
+                        <td style={tdStyle}>
+                          <p>Unable to delete older files</p>
+                        </td>
+                      </tr>
+                    );
+                  })
+                : null}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </div>
   );
 }

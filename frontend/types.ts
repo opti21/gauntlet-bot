@@ -26,6 +26,7 @@ export type Submission = {
   user_profile: User | null;
   images: string[];
   files: string[];
+  uploaded_files: File[];
 };
 
 export type FrontendSubmission = {
@@ -39,6 +40,7 @@ export type FrontendSubmission = {
   gauntlet_week;
   images: File[];
   files: File[];
+  uploaded_files: File[];
 };
 
 export type WeekApiResponse = {
@@ -68,4 +70,6 @@ export type File = {
   type?: string;
   etag?: string;
   key?: string;
+  user_id: string;
+  submissionsId?: number;
 };

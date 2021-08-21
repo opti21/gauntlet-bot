@@ -1,4 +1,4 @@
-import { Alert, Layout, Typography } from "antd";
+import { Alert, Button, Layout, Typography } from "antd";
 const { Content } = Layout;
 const { Title } = Typography;
 import Gfooter from "../components/Gfooter";
@@ -11,6 +11,8 @@ import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import useSWR from "swr";
 import { useRouter } from "next/router";
 import SubEditForm from "../components/SubEditForm";
+import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 
 export default withPageAuthRequired(function Edit() {
   const router = useRouter();
@@ -44,7 +46,8 @@ export default withPageAuthRequired(function Edit() {
           </Title>
           {!userError && !submissionError ? (
             !isLoading && submissionData ? (
-              submissionData.submission.user === user.sub.split("|")[2] ? (
+              submissionData.submission.user === user.sub.split("|")[2] ||
+              submissionData.is_admin ? (
                 <SubEditForm submission={submissionData.submission} />
               ) : (
                 <Alert
