@@ -29,6 +29,7 @@ export default function Current() {
         <Content
           style={{
             padding: "0 10%",
+            height: "80vh",
           }}
         >
           <Title
