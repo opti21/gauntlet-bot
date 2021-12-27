@@ -24,7 +24,7 @@ export default function Current() {
   return (
     <>
       <Head>
-        <title>Gauntlet Bot - Current Week</title>
+        <title>Gauntlet Bot - Current Gauntlet</title>
       </Head>
       <Layout className="layout bg">
         <Gheader activePage={"1"} />
